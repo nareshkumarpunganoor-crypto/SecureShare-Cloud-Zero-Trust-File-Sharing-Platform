@@ -1,0 +1,2218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SecureShare Cloud — Zero-Trust Secure File Sharing Platform</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%2322d3ee' d='M12 1l9.5 4.2v7.1c0 5.8-4 11.2-9.5 12.7C6.5 23.5 2.5 18.1 2.5 12.3V5.2z'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<style>
+/* ============ SECURESHARE CLOUD — DESIGN SYSTEM ============ */
+:root{
+  --bg:#04070f;
+  --panel:rgba(13,20,38,.72);
+  --panel2:#0d1626;
+  --panel3:rgba(22,33,58,.5);
+  --border:rgba(148,163,184,.12);
+  --border2:rgba(148,163,184,.24);
+  --text:#e6edf7;
+  --muted:#7d8ca3;
+  --faint:#55637d;
+  --cyan:#22d3ee;
+  --emerald:#34d399;
+  --amber:#fbbf24;
+  --red:#fb7185;
+  --violet:#a78bfa;
+  --radius:18px;
+  --mono:'JetBrains Mono',monospace;
+  --disp:'Space Grotesk',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+[hidden]{display:none !important}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Inter',sans-serif;
+  font-size:14px;
+  line-height:1.5;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:rgba(34,211,238,.28);color:#eafcff}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(100,116,139,.38);border-radius:6px}
+::-webkit-scrollbar-thumb:hover{background:rgba(100,116,139,.6)}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:2px;border-radius:4px}
+.mono{font-family:var(--mono)}
+.disp{font-family:var(--disp)}
+
+/* ============ BACKGROUND FX ============ */
+.bg-fx{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(1100px 620px at 78% -12%, rgba(34,211,238,.09), transparent 60%),
+    radial-gradient(900px 560px at -12% 112%, rgba(52,211,153,.07), transparent 62%),
+    radial-gradient(700px 500px at 55% 120%, rgba(167,139,250,.05), transparent 60%);
+}
+.bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:radial-gradient(rgba(148,163,184,.13) 1px, transparent 1px);
+  background-size:26px 26px;
+  -webkit-mask-image:radial-gradient(ellipse 95% 80% at 50% -5%, black 25%, transparent 72%);
+          mask-image:radial-gradient(ellipse 95% 80% at 50% -5%, black 25%, transparent 72%);
+}
+
+/* ============ APP SHELL ============ */
+.app{position:relative;z-index:1;display:grid;grid-template-columns:272px minmax(0,1fr);min-height:100vh}
+.main{grid-column:2;min-width:0;display:flex;flex-direction:column}
+.content{flex:1;padding:26px 28px 8px;max-width:1560px;width:100%;margin:0 auto}
+
+/* ============ SIDEBAR ============ */
+.sidebar{
+  position:fixed;left:0;top:0;bottom:0;width:272px;z-index:45;
+  display:flex;flex-direction:column;gap:4px;
+  background:rgba(6,10,22,.86);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
+  border-right:1px solid var(--border);padding:20px 16px 16px;
+  transition:transform .32s cubic-bezier(.4,0,.2,1);
+}
+.logo-block{display:flex;align-items:center;gap:12px;padding:4px 8px 16px;border-bottom:1px solid var(--border);margin-bottom:12px}
+.logo-mark{position:relative;width:44px;height:44px;flex:0 0 auto;filter:drop-shadow(0 0 14px rgba(34,211,238,.4));overflow:visible}
+.logo-scan{position:absolute;left:7px;right:7px;height:9px;top:0;background:linear-gradient(180deg,transparent,rgba(224,254,255,.85),transparent);animation:scanY 3.2s ease-in-out infinite;opacity:.85;border-radius:4px;pointer-events:none}
+@keyframes scanY{0%,100%{transform:translateY(6px);opacity:0}15%{opacity:.9}50%{transform:translateY(30px)}55%{opacity:0}}
+.logo-text{font:700 19px var(--disp);letter-spacing:-.02em;line-height:1.05;color:#f1f7ff}
+.logo-text em{font-style:normal;background:linear-gradient(120deg,#22d3ee,#34d399);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.logo-sub{font:600 8px var(--mono);letter-spacing:.24em;color:var(--muted);margin-top:4px}
+
+.nav{flex:1;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:2px;padding-right:2px}
+.nav-label{font:600 9.5px var(--mono);letter-spacing:.22em;color:var(--faint);padding:14px 12px 6px}
+.nav-item{
+  display:flex;align-items:center;gap:11px;height:40px;padding:0 12px;border-radius:11px;
+  color:var(--muted);border:1px solid transparent;background:transparent;cursor:pointer;
+  font:500 13px 'Inter';text-align:left;position:relative;transition:all .2s;width:100%;
+}
+.nav-item svg{flex:0 0 auto;stroke:currentColor;transition:all .2s}
+.nav-item:hover{color:var(--text);background:rgba(148,163,184,.06)}
+.nav-item.active{color:#67e8f9;background:linear-gradient(90deg,rgba(34,211,238,.13),rgba(34,211,238,.03));border-color:rgba(34,211,238,.22)}
+.nav-item.active::before{content:'';position:absolute;left:-16px;top:9px;bottom:9px;width:3px;border-radius:0 3px 3px 0;background:linear-gradient(180deg,#22d3ee,#34d399);box-shadow:0 0 10px rgba(34,211,238,.7)}
+.nav-item.active svg{stroke:#22d3ee;filter:drop-shadow(0 0 6px rgba(34,211,238,.6))}
+.nav-badge{margin-left:auto;font:600 10px var(--mono);min-width:22px;height:19px;padding:0 6px;border-radius:6px;display:flex;align-items:center;justify-content:center;background:rgba(148,163,184,.1);color:var(--muted);border:1px solid var(--border)}
+.nav-item.active .nav-badge{background:rgba(34,211,238,.14);color:#67e8f9;border-color:rgba(34,211,238,.3)}
+.nav-badge.danger{background:rgba(244,63,94,.16);color:#fda4af;border-color:rgba(244,63,94,.35)}
+
+.posture-card{
+  position:relative;border-radius:var(--radius);padding:16px;margin:8px 2px 12px;
+  background:linear-gradient(165deg,rgba(22,38,66,.75),rgba(10,17,33,.8));
+  border:1px solid rgba(34,211,238,.22);overflow:hidden;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 14px 40px rgba(0,0,0,.4);
+}
+.posture-card::before{content:'';position:absolute;top:-70px;right:-70px;width:170px;height:170px;border-radius:50%;background:radial-gradient(circle,rgba(34,211,238,.16),transparent 70%)}
+.posture-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.posture-title{font:600 9px var(--mono);letter-spacing:.22em;color:var(--muted)}
+.posture-live{display:flex;align-items:center;gap:5px;font:600 8.5px var(--mono);letter-spacing:.14em;color:#34d399}
+.pulse-dot{width:6px;height:6px;border-radius:50%;background:#34d399;animation:pulseDot 1.6s ease-in-out infinite}
+@keyframes pulseDot{0%,100%{box-shadow:0 0 0 0 rgba(52,211,153,.6)}50%{box-shadow:0 0 0 4px rgba(52,211,153,.12);opacity:.75}}
+.posture-body{display:flex;align-items:center;gap:14px}
+.posture-ring-wrap{position:relative;flex:0 0 auto}
+.posture-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.posture-center b{font:700 19px var(--disp);color:#f0f9ff;letter-spacing:-.02em}
+.posture-center small{font:500 7.5px var(--mono);color:var(--muted);letter-spacing:.1em}
+.posture-meta{display:flex;flex-direction:column;gap:3px}
+.posture-grade{font:600 12px 'Inter';color:#a7f3d0}
+.posture-note{font-size:10.5px;color:var(--muted);line-height:1.45}
+
+.user-chip{display:flex;align-items:center;gap:10px;padding:10px;border-radius:14px;border:1px solid var(--border);background:rgba(15,23,42,.5)}
+.avatar{width:38px;height:38px;flex:0 0 auto;border-radius:11px;background:linear-gradient(140deg,#22d3ee,#34d399);color:#032830;display:flex;align-items:center;justify-content:center;font:700 12.5px var(--disp);letter-spacing:.03em;position:relative}
+.avatar::after{content:'';position:absolute;bottom:-2px;right:-2px;width:11px;height:11px;border-radius:50%;background:#34d399;border:2px solid #060a16}
+.user-name{font:600 12.5px 'Inter';color:#eef4ff}
+.user-role{font:500 9.5px var(--mono);color:var(--muted);letter-spacing:.04em}
+.icon-btn{width:34px;height:34px;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;border-radius:9px;border:1px solid transparent;background:transparent;color:var(--muted);cursor:pointer;transition:all .18s}
+.icon-btn:hover{color:var(--text);background:rgba(148,163,184,.09);border-color:var(--border)}
+
+/* ============ TOPBAR ============ */
+.topbar{
+  position:sticky;top:0;z-index:35;height:64px;display:flex;align-items:center;gap:14px;
+  padding:0 28px;background:rgba(4,7,15,.78);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border-bottom:1px solid var(--border);
+}
+.hamburger{display:none}
+.search{flex:1;max-width:540px;display:flex;align-items:center;gap:10px;height:40px;padding:0 13px;border-radius:12px;background:rgba(15,23,42,.62);border:1px solid var(--border);transition:all .22s}
+.search:focus-within{border-color:rgba(34,211,238,.4);box-shadow:0 0 0 3px rgba(34,211,238,.09),0 0 24px rgba(34,211,238,.06);background:rgba(15,23,42,.85)}
+.search svg{stroke:var(--muted);flex:0 0 auto}
+.search input{flex:1;min-width:0;background:transparent;border:none;outline:none;color:var(--text);font:400 13px 'Inter'}
+.search input::placeholder{color:var(--faint)}
+.kbd{font:600 9.5px var(--mono);color:var(--muted);border:1px solid var(--border2);border-bottom-width:2px;border-radius:5px;padding:2px 5px;background:rgba(2,6,17,.5);white-space:nowrap}
+.topbar-right{display:flex;align-items:center;gap:10px;margin-left:auto}
+.session-pill{display:flex;align-items:center;gap:9px;height:40px;padding:0 13px;border-radius:12px;border:1px solid rgba(52,211,153,.3);background:rgba(52,211,153,.06)}
+.session-label{font:600 8px var(--mono);letter-spacing:.18em;color:var(--muted);line-height:1.3}
+.session-time{font:600 13px var(--mono);color:#6ee7b7;letter-spacing:.06em}
+.session-pill.warn{border-color:rgba(251,113,133,.4);background:rgba(251,113,133,.07)}
+.session-pill.warn .session-time{color:#fda4af;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:.5}}
+.utc-clock{font:500 11px var(--mono);color:var(--muted);text-align:right;line-height:1.35;min-width:92px}
+.utc-clock b{color:#a8e6ff;font-weight:600}
+.bell-wrap{position:relative}
+.bell-badge{position:absolute;top:-5px;right:-5px;min-width:19px;height:19px;padding:0 5px;border-radius:9px;background:linear-gradient(135deg,#f43f5e,#fb7185);color:#fff;font:700 9px 'Inter';display:flex;align-items:center;justify-content:center;border:2px solid #04070f;box-shadow:0 2px 8px rgba(244,63,94,.5)}
+
+/* Notifications panel */
+.notif-panel{
+  position:absolute;top:52px;right:0;width:380px;max-width:92vw;z-index:60;
+  background:#0c1428;border:1px solid var(--border2);border-radius:16px;overflow:hidden;
+  box-shadow:0 24px 60px rgba(0,0,0,.6),0 0 0 1px rgba(34,211,238,.06);
+  opacity:0;transform:translateY(-8px) scale(.98);pointer-events:none;transition:all .25s;
+}
+.notif-panel.open{opacity:1;transform:none;pointer-events:auto}
+.notif-head{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid var(--border)}
+.notif-head h4{font:600 12px 'Inter';letter-spacing:.02em}
+.notif-head span{font:500 10px var(--mono);color:var(--muted)}
+.notif-item{display:flex;gap:11px;padding:12px 16px;border-bottom:1px solid rgba(148,163,184,.07);transition:background .15s;cursor:pointer}
+.notif-item:hover{background:rgba(148,163,184,.05)}
+.notif-item.unread{background:rgba(34,211,238,.035)}
+.ndot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex:0 0 auto}
+.ndot.red{background:#fb7185;box-shadow:0 0 8px rgba(251,113,133,.6)}
+.ndot.amber{background:#fbbf24;box-shadow:0 0 8px rgba(251,191,36,.5)}
+.ndot.emerald{background:#34d399;box-shadow:0 0 8px rgba(52,211,153,.5)}
+.ndot.cyan{background:#22d3ee;box-shadow:0 0 8px rgba(34,211,238,.5)}
+.notif-title{font:600 12px 'Inter';color:#e8eefb}
+.notif-sub{font-size:10.5px;color:var(--muted);margin-top:2px;line-height:1.45}
+.notif-time{font:500 9px var(--mono);color:var(--faint);margin-top:4px}
+.notif-foot{padding:10px;text-align:center;border-top:1px solid var(--border)}
+.notif-foot button{background:none;border:none;color:#67e8f9;font:600 11px 'Inter';cursor:pointer;letter-spacing:.02em}
+.notif-foot button:hover{color:#a5f3fc}
+
+/* ============ BUTTONS ============ */
+.btn{display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 16px;border-radius:11px;font:600 12.5px 'Inter';color:var(--text);background:rgba(15,23,42,.6);border:1px solid var(--border2);cursor:pointer;transition:all .2s;white-space:nowrap;text-decoration:none}
+.btn:hover{border-color:rgba(148,163,184,.4);transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn-primary{background:linear-gradient(135deg,#22d3ee 0%,#0ea5e9 100%);color:#032631;border:none;box-shadow:0 8px 26px rgba(34,211,238,.3),inset 0 1px 0 rgba(255,255,255,.45)}
+.btn-primary:hover{box-shadow:0 10px 34px rgba(34,211,238,.42),inset 0 1px 0 rgba(255,255,255,.5);border:none}
+.btn-danger-ghost{background:rgba(244,63,94,.07);border:1px solid rgba(244,63,94,.35);color:#fda4af}
+.btn-danger-ghost:hover{background:rgba(244,63,94,.14);border-color:rgba(244,63,94,.5)}
+.btn[disabled]{opacity:.55;cursor:not-allowed;transform:none}
+
+/* ============ CARDS ============ */
+.card{background:var(--panel);backdrop-filter:blur(14px);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 14px 40px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.04)}
+.card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:1px solid var(--border)}
+.card-title{font:600 13px 'Inter';color:#eef4ff;display:flex;align-items:center;gap:9px}
+.card-title .ct-dot{width:7px;height:7px;border-radius:2px;background:var(--cyan);box-shadow:0 0 8px rgba(34,211,238,.7)}
+.card-body{padding:18px 20px}
+
+/* ============ PAGES ============ */
+.page{display:none}
+.page.active{display:block;animation:pageIn .4s cubic-bezier(.2,.8,.3,1)}
+@keyframes pageIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.eyebrow{font:600 9px var(--mono);letter-spacing:.26em;color:var(--cyan);margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.eyebrow::before{content:'';width:18px;height:1px;background:var(--cyan);display:inline-block}
+.page-title{font:600 25px var(--disp);letter-spacing:-.02em;color:#f2f8ff}
+.page-sub{font-size:12px;color:var(--muted);margin-top:4px;max-width:620px}
+
+/* ============ STAT CARDS ============ */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:18px}
+.stat-card{position:relative;padding:17px 18px 15px;border-radius:var(--radius);background:linear-gradient(165deg,var(--panel3),rgba(12,19,36,.72));border:1px solid var(--border);overflow:hidden;transition:all .3s}
+.stat-card::after{content:'';position:absolute;top:-50px;right:-50px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,var(--glow,rgba(34,211,238,.14)),transparent 70%)}
+.stat-card:hover{transform:translateY(-3px);border-color:var(--border2);box-shadow:0 18px 44px rgba(0,0,0,.45)}
+.stat-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;position:relative}
+.stat-label{font:600 9px var(--mono);letter-spacing:.2em;color:var(--muted)}
+.stat-ic{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center}
+.tone-cyan{background:rgba(34,211,238,.11);border:1px solid rgba(34,211,238,.28);color:#22d3ee}
+.tone-violet{background:rgba(167,139,250,.11);border:1px solid rgba(167,139,250,.28);color:#a78bfa}
+.tone-emerald{background:rgba(52,211,153,.11);border:1px solid rgba(52,211,153,.28);color:#34d399}
+.tone-red{background:rgba(251,113,133,.11);border:1px solid rgba(251,113,133,.28);color:#fb7185}
+.stat-value{font:600 29px var(--disp);letter-spacing:-.03em;color:#f3f8ff;position:relative}
+.stat-value small{font-size:14px;color:var(--muted);font-weight:500;margin-left:3px}
+.stat-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:9px;position:relative}
+.stat-trend{display:inline-flex;align-items:center;gap:5px;font:600 10px var(--mono)}
+.trend-up{color:#34d399}.trend-warn{color:#fbbf24}
+.stat-note{font-size:10px;color:var(--faint)}
+.spark{opacity:.9}
+.pbar{height:6px;border-radius:4px;background:rgba(148,163,184,.13);overflow:hidden}
+.pbar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#a78bfa,#22d3ee);width:0;transition:width 1.3s cubic-bezier(.2,.8,.3,1)}
+
+/* ============ DASHBOARD ROWS ============ */
+.dash-row{display:grid;grid-template-columns:minmax(0,1.85fr) minmax(0,1fr);gap:16px;margin-bottom:18px}
+.chart-legend{display:flex;gap:14px;align-items:center}
+.leg{display:flex;align-items:center;gap:6px;font:500 10.5px var(--mono);color:var(--muted)}
+.leg i{width:14px;height:3px;border-radius:2px;display:inline-block}
+.range-select{height:30px;background:rgba(15,23,42,.7);border:1px solid var(--border2);color:var(--muted);border-radius:8px;font:500 10.5px var(--mono);padding:0 8px;outline:none;cursor:pointer}
+.range-select:focus{border-color:rgba(34,211,238,.4)}
+
+.donut-wrap{position:relative;display:flex;justify-content:center;padding:6px 0 2px}
+.donut-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none}
+.donut-center b{font:600 24px var(--disp);color:#f0f9ff;letter-spacing:-.02em;display:block}
+.donut-center small{font:500 8.5px var(--mono);letter-spacing:.16em;color:var(--muted)}
+.donut-legend{margin-top:6px;display:flex;flex-direction:column;gap:7px}
+.dl-row{display:flex;align-items:center;gap:9px;font-size:11.5px}
+.dl-dot{width:9px;height:9px;border-radius:3px;flex:0 0 auto}
+.dl-name{color:var(--muted);flex:1}
+.dl-val{font:600 11px var(--mono);color:#dbe7f7}
+.dl-pct{font:500 9.5px var(--mono);color:var(--faint);width:44px;text-align:right}
+
+/* recent files table */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{text-align:left;font:600 9px var(--mono);letter-spacing:.18em;color:var(--faint);padding:9px 12px;border-bottom:1px solid var(--border);text-transform:uppercase}
+.tbl td{padding:10px 12px;border-bottom:1px solid rgba(148,163,184,.07);vertical-align:middle;font-size:12px}
+.tbl tbody tr{transition:background .15s}
+.tbl tbody tr:hover{background:rgba(34,211,238,.035)}
+.tbl tbody tr:last-child td{border-bottom:none}
+.tname{display:flex;align-items:center;gap:9px;font-weight:500;color:#e9effc;max-width:250px}
+.tname span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* live feed */
+.feed-head{display:flex;align-items:center;justify-content:space-between}
+.feed-live{display:flex;align-items:center;gap:8px;font:600 9px var(--mono);letter-spacing:.2em;color:#34d399}
+.feed-list{display:flex;flex-direction:column;max-height:318px;overflow:hidden}
+.feed-item{display:flex;align-items:flex-start;gap:9px;padding:8px 4px;border-bottom:1px solid rgba(148,163,184,.06);animation:feedIn .4s ease}
+@keyframes feedIn{from{opacity:0;transform:translateY(-9px)}to{opacity:1;transform:none}}
+.feed-item:last-child{border-bottom:none}
+.feed-dot{width:7px;height:7px;border-radius:50%;margin-top:5px;flex:0 0 auto}
+.fd-emerald{background:#34d399;box-shadow:0 0 7px rgba(52,211,153,.7)}
+.fd-cyan{background:#22d3ee;box-shadow:0 0 7px rgba(34,211,238,.7)}
+.fd-red{background:#fb7185;box-shadow:0 0 7px rgba(251,113,133,.7)}
+.fd-amber{background:#fbbf24;box-shadow:0 0 7px rgba(251,191,36,.7)}
+.feed-txt{flex:1;font-size:11px;color:#c3cfe3;line-height:1.5}
+.feed-txt b{color:#eef4ff;font-weight:600}
+.feed-time{font:500 9px var(--mono);color:var(--faint);margin-top:3px}
+.feed-btn{background:none;border:1px solid var(--border2);border-radius:7px;color:var(--muted);font:600 9px var(--mono);letter-spacing:.08em;padding:5px 9px;cursor:pointer;transition:all .2s}
+.feed-btn:hover{color:var(--text);border-color:rgba(148,163,184,.4)}
+
+/* ============ FILE ICONS ============ */
+.fic{width:44px;height:44px;flex:0 0 auto;border-radius:12px;display:flex;align-items:center;justify-content:center;font:700 9.5px var(--mono);letter-spacing:.06em;border:1px solid rgba(255,255,255,.1);box-shadow:inset 0 1px 0 rgba(255,255,255,.13)}
+.fic-lg{width:58px;height:58px;border-radius:15px;font-size:11px}
+.fic-pdf{background:linear-gradient(150deg,rgba(244,63,94,.3),rgba(244,63,94,.09));color:#fda4af;border-color:rgba(244,63,94,.32)}
+.fic-xlsx{background:linear-gradient(150deg,rgba(52,211,153,.28),rgba(52,211,153,.08));color:#86efac;border-color:rgba(52,211,153,.32)}
+.fic-csv{background:linear-gradient(150deg,rgba(45,212,191,.28),rgba(45,212,191,.08));color:#5eead4;border-color:rgba(45,212,191,.32)}
+.fic-docx{background:linear-gradient(150deg,rgba(96,165,250,.28),rgba(96,165,250,.08));color:#93c5fd;border-color:rgba(96,165,250,.32)}
+.fic-zip{background:linear-gradient(150deg,rgba(251,191,36,.26),rgba(251,191,36,.08));color:#fde68a;border-color:rgba(251,191,36,.3)}
+.fic-mp4{background:linear-gradient(150deg,rgba(244,114,182,.28),rgba(244,114,182,.08));color:#f9a8d4;border-color:rgba(244,114,182,.32)}
+.fic-png{background:linear-gradient(150deg,rgba(167,139,250,.28),rgba(167,139,250,.08));color:#c4b5fd;border-color:rgba(167,139,250,.32)}
+.fic-fig{background:linear-gradient(150deg,rgba(232,121,249,.26),rgba(232,121,249,.08));color:#f0abfc;border-color:rgba(232,121,249,.32)}
+.fic-txt{background:linear-gradient(150deg,rgba(148,163,184,.25),rgba(148,163,184,.07));color:#cbd5e1;border-color:rgba(148,163,184,.3)}
+
+/* classification badges */
+.cls{font:600 8.5px var(--mono);letter-spacing:.12em;padding:3px 8px;border-radius:6px;border:1px solid;white-space:nowrap}
+.cls-Restricted{color:#fda4af;background:rgba(244,63,94,.12);border-color:rgba(244,63,94,.36)}
+.cls-Confidential{color:#c4b5fd;background:rgba(167,139,250,.11);border-color:rgba(167,139,250,.36)}
+.cls-Internal{color:#67e8f9;background:rgba(34,211,238,.09);border-color:rgba(34,211,238,.3)}
+.cls-Public{color:#6ee7b7;background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.32)}
+
+.risk{display:inline-flex;align-items:center;gap:6px;font:600 10.5px var(--mono)}
+.risk i{width:6px;height:6px;border-radius:50%;background:currentColor;box-shadow:0 0 7px currentColor}
+.risk-low{color:#34d399}.risk-medium{color:#fbbf24}.risk-high{color:#fb7185}
+.rbar{width:58px;height:5px;border-radius:3px;background:rgba(148,163,184,.14);overflow:hidden}
+.rbar>div{height:100%;border-radius:3px}
+.rbar-low{background:#34d399}.rbar-medium{background:#fbbf24}.rbar-high{background:#fb7185}
+
+/* ============ FILES PAGE ============ */
+.files-toolbar{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.chip-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;flex:1;min-width:0}
+.chip{flex:0 0 auto;height:30px;padding:0 14px;border-radius:999px;border:1px solid var(--border2);background:rgba(15,23,42,.5);color:var(--muted);font:500 11px 'Inter';cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:6px}
+.chip:hover{color:var(--text);border-color:rgba(148,163,184,.35)}
+.chip.active{background:rgba(34,211,238,.13);border-color:rgba(34,211,238,.45);color:#67e8f9;box-shadow:0 0 14px rgba(34,211,238,.12)}
+.sort-select{height:32px;background:rgba(15,23,42,.7);border:1px solid var(--border2);color:#b9c6dc;border-radius:9px;font:500 11px var(--mono);padding:0 9px;outline:none;cursor:pointer}
+.seg{display:flex;background:rgba(15,23,42,.66);border:1px solid var(--border2);border-radius:10px;padding:3px;gap:2px}
+.seg button{width:32px;height:28px;border:none;background:transparent;border-radius:7px;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s}
+.seg button.active{background:rgba(34,211,238,.15);color:#22d3ee;box-shadow:inset 0 0 0 1px rgba(34,211,238,.3)}
+.files-meta{font:500 10.5px var(--mono);color:var(--faint);margin-bottom:12px;letter-spacing:.03em}
+
+.file-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(212px,1fr));gap:14px}
+.file-card{position:relative;display:flex;flex-direction:column;gap:9px;padding:14px;border-radius:16px;background:linear-gradient(168deg,rgba(22,33,58,.55),rgba(11,18,34,.65));border:1px solid var(--border);transition:all .25s;overflow:hidden}
+.file-card:hover{transform:translateY(-4px);border-color:rgba(34,211,238,.32);box-shadow:0 20px 46px rgba(0,0,0,.5),0 0 0 1px rgba(34,211,238,.12),0 0 34px rgba(34,211,238,.07)}
+.fc-top{display:flex;align-items:flex-start;justify-content:space-between}
+.star-btn{color:var(--faint);opacity:.75}
+.star-btn.starred{color:#fbbf24;opacity:1;filter:drop-shadow(0 0 6px rgba(251,191,36,.5))}
+.star-btn.starred svg{fill:#fbbf24}
+.fc-name{font:600 12.5px 'Inter';color:#edf3ff;line-height:1.4;word-break:break-word;min-height:35px}
+.fc-meta{font:400 9.5px var(--mono);color:var(--muted);letter-spacing:.02em}
+.fc-foot{display:flex;align-items:center;justify-content:space-between;gap:6px;border-top:1px solid rgba(148,163,184,.09);padding-top:10px;margin-top:auto}
+.fc-actions{display:flex;gap:4px}
+.mini-btn{width:28px;height:28px;border-radius:8px;border:1px solid var(--border);background:rgba(15,23,42,.5);color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .18s}
+.mini-btn:hover{color:#67e8f9;border-color:rgba(34,211,238,.4);background:rgba(34,211,238,.09)}
+.mini-btn.danger:hover{color:#fda4af;border-color:rgba(244,63,94,.4);background:rgba(244,63,94,.09)}
+
+.file-list-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);background:var(--panel)}
+.row-name{display:flex;align-items:center;gap:10px;font-weight:500;color:#e9effc}
+
+.empty-state{text-align:center;padding:56px 20px;color:var(--muted)}
+.empty-state h4{font:600 14px 'Inter';color:#cdd9ee;margin:14px 0 5px}
+.empty-state p{font-size:11.5px}
+
+/* ============ LINKS PAGE ============ */
+.links-table{width:100%;border-collapse:collapse;min-width:760px}
+.links-table th{text-align:left;font:600 9px var(--mono);letter-spacing:.18em;color:var(--faint);padding:11px 16px;border-bottom:1px solid var(--border)}
+.links-table td{padding:13px 16px;border-bottom:1px solid rgba(148,163,184,.07);vertical-align:middle;font-size:12px}
+.links-table tr:last-child td{border-bottom:none}
+.perm-badge{font:600 9px var(--mono);letter-spacing:.1em;padding:3px 9px;border-radius:6px;border:1px solid}
+.perm-Viewer{color:#67e8f9;border-color:rgba(34,211,238,.35);background:rgba(34,211,238,.08)}
+.perm-Editor{color:#c4b5fd;border-color:rgba(167,139,250,.35);background:rgba(167,139,250,.09)}
+.perm-Full{color:#fde68a;border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.08)}
+.link-mono{font:500 10.5px var(--mono);color:#8ee9f9;background:rgba(34,211,238,.06);border:1px dashed rgba(34,211,238,.25);border-radius:7px;padding:3px 8px}
+.revoked-row{opacity:.4;filter:grayscale(1)}
+.revoked-row .link-mono{text-decoration:line-through}
+
+/* ============ SECURITY CENTER ============ */
+.security-grid{display:grid;grid-template-columns:minmax(0,1.9fr) minmax(0,1fr);gap:16px;margin-bottom:18px}
+.layer-row{display:flex;align-items:center;gap:13px;padding:12px 0;border-bottom:1px solid rgba(148,163,184,.08)}
+.layer-row:last-child{border-bottom:none;padding-bottom:2px}
+.layer-ic{width:38px;height:38px;flex:0 0 auto;border-radius:11px;display:flex;align-items:center;justify-content:center}
+.layer-body{flex:1;min-width:0}
+.layer-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:5px}
+.layer-name{font:600 12px 'Inter';color:#e8eefb}
+.layer-rate{font:600 10.5px var(--mono);color:#6ee7b7}
+.layer-rate.degraded{color:#fda4af}
+.layer-desc{font-size:10px;color:var(--faint);margin-top:4px}
+.layer-bar{height:5px;border-radius:3px;background:rgba(148,163,184,.13);overflow:hidden}
+.layer-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#0ea5e9,#34d399);transition:width 1s ease}
+.layer-fill.degraded{background:linear-gradient(90deg,#f43f5e,#fb923c)}
+.layer-chip{font:600 8px var(--mono);letter-spacing:.14em;padding:4px 8px;border-radius:6px;flex:0 0 auto}
+.layer-chip.ok{color:#6ee7b7;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3)}
+.layer-chip.bad{color:#fda4af;background:rgba(244,63,94,.12);border:1px solid rgba(244,63,94,.35)}
+
+.policy-row{display:flex;align-items:center;gap:13px;padding:13px 0;border-bottom:1px solid rgba(148,163,184,.08)}
+.policy-row:last-child{border-bottom:none;padding-bottom:2px}
+.policy-body{flex:1;min-width:0}
+.policy-name{font:600 12px 'Inter';color:#e8eefb;display:flex;align-items:center;gap:8px}
+.policy-desc{font-size:10.5px;color:var(--muted);margin-top:2px;line-height:1.45}
+.enforced-chip{font:600 8px var(--mono);letter-spacing:.14em;color:#67e8f9;background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.32);border-radius:5px;padding:2px 6px}
+
+.switch{position:relative;display:inline-block;width:40px;height:22px;flex:0 0 auto}
+.switch input{opacity:0;width:0;height:0}
+.switch .sl{position:absolute;inset:0;border-radius:999px;background:rgba(148,163,184,.16);border:1px solid var(--border2);transition:all .25s;cursor:pointer}
+.switch .sl::after{content:'';position:absolute;left:2px;top:2px;width:16px;height:16px;border-radius:50%;background:#cbd5e1;transition:all .25s}
+.switch input:checked + .sl{background:linear-gradient(135deg,#22d3ee,#10b981);border-color:transparent;box-shadow:0 0 14px rgba(34,211,238,.3)}
+.switch input:checked + .sl::after{transform:translateX(18px);background:#032830}
+.switch input:focus-visible + .sl{outline:2px solid var(--cyan);outline-offset:2px}
+
+.sim-card{position:relative;border-radius:var(--radius);padding:20px;overflow:hidden;border:1px solid rgba(251,113,133,.32);background:linear-gradient(160deg,rgba(80,15,30,.5),rgba(20,8,16,.72));box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 14px 40px rgba(244,63,94,.06);margin-bottom:16px}
+.sim-card::before{content:'';position:absolute;top:-60px;right:-60px;width:170px;height:170px;border-radius:50%;background:radial-gradient(circle,rgba(251,113,133,.2),transparent 70%)}
+.sim-badge{display:inline-flex;align-items:center;gap:7px;font:700 8.5px var(--mono);letter-spacing:.22em;color:#fda4af;background:rgba(244,63,94,.14);border:1px solid rgba(244,63,94,.4);border-radius:7px;padding:5px 10px;margin-bottom:12px}
+.sim-card h3{font:600 16px var(--disp);letter-spacing:-.01em;color:#ffe4e6;margin-bottom:7px}
+.sim-card p{font-size:11px;color:#c9a3ab;line-height:1.55;margin-bottom:14px}
+.btn-sim{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;height:44px;border:none;border-radius:12px;background:linear-gradient(135deg,#e11d48,#fb7185);color:#fff;font:700 12.5px 'Inter';letter-spacing:.03em;cursor:pointer;transition:all .25s;box-shadow:0 10px 30px rgba(225,29,72,.35),inset 0 1px 0 rgba(255,255,255,.3)}
+.btn-sim:hover{transform:translateY(-2px);box-shadow:0 14px 38px rgba(225,29,72,.45),inset 0 1px 0 rgba(255,255,255,.3)}
+.sim-note{font:500 9px var(--mono);color:#8a5a63;margin-top:10px;text-align:center;letter-spacing:.02em}
+
+.blocked-item{padding:11px 13px;border:1px solid rgba(244,63,94,.17);background:linear-gradient(160deg,rgba(244,63,94,.06),transparent);border-radius:13px;margin-bottom:10px;transition:all .3s}
+.blocked-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.blocked-reason{font:600 11px 'Inter';color:#fecdd3}
+.blocked-time{font:500 9px var(--mono);color:var(--faint);flex:0 0 auto}
+.blocked-target{font:500 10px var(--mono);color:#c98a94;margin:4px 0 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.blocked-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.blocked-ip{font:500 9.5px var(--mono);color:#9fb2cc}
+.blocked-geo{font-size:9.5px;color:var(--faint)}
+.quarantine-btn{margin-left:auto;font:600 9px var(--mono);letter-spacing:.08em;color:#fda4af;border:1px solid rgba(244,63,94,.4);background:transparent;border-radius:7px;padding:4px 9px;cursor:pointer;transition:all .2s;white-space:nowrap}
+.quarantine-btn:hover{background:rgba(244,63,94,.16)}
+.quarantine-btn.done{color:#6ee7b7;border-color:rgba(52,211,153,.4);cursor:default;background:rgba(52,211,153,.06)}
+
+/* ============ AUDIT LOG ============ */
+.audit-toolbar{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.audit-search{flex:1;min-width:200px;max-width:340px;height:36px;display:flex;align-items:center;gap:9px;padding:0 12px;border-radius:10px;background:rgba(15,23,42,.6);border:1px solid var(--border)}
+.audit-search input{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:12px;min-width:0}
+.audit-seg button{width:auto;padding:0 14px;height:30px;border:none;background:transparent;border-radius:8px;color:var(--muted);font:600 11px 'Inter';cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:7px}
+.audit-seg button.active{background:rgba(34,211,238,.15);color:#67e8f9;box-shadow:inset 0 0 0 1px rgba(34,211,238,.3)}
+.audit-seg .cnt{font:600 9px var(--mono);opacity:.8}
+.audit-wrap{max-height:520px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius);background:var(--panel)}
+.audit-table{width:100%;border-collapse:collapse;min-width:820px}
+.audit-table th{position:sticky;top:0;background:#0e1830;z-index:1;text-align:left;font:600 9px var(--mono);letter-spacing:.18em;color:var(--faint);padding:11px 14px;border-bottom:1px solid var(--border2)}
+.audit-table td{padding:9px 14px;border-bottom:1px solid rgba(148,163,184,.06);font-size:11.5px;vertical-align:middle}
+.audit-table tr:hover td{background:rgba(34,211,238,.03)}
+.event-chip{font:500 9.5px var(--mono);color:#a8e6ff;background:rgba(34,211,238,.06);border:1px solid rgba(34,211,238,.14);border-radius:6px;padding:2px 7px;white-space:nowrap}
+.res{font:600 9px var(--mono);letter-spacing:.1em;padding:3px 9px;border-radius:6px;border:1px solid;white-space:nowrap}
+.res-Allowed{color:#6ee7b7;border-color:rgba(52,211,153,.35);background:rgba(52,211,153,.09)}
+.res-Denied{color:#fda4af;border-color:rgba(244,63,94,.38);background:rgba(244,63,94,.1)}
+.res-Challenged{color:#fde68a;border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.08)}
+.u-cell{display:flex;align-items:center;gap:8px;font-size:11.5px;color:#d7e1f2}
+.u-dot{width:24px;height:24px;flex:0 0 auto;border-radius:7px;display:flex;align-items:center;justify-content:center;font:700 9px var(--disp);color:#04131a}
+.ud-0{background:#22d3ee}.ud-1{background:#a78bfa}.ud-2{background:#34d399}.ud-3{background:#fbbf24}
+
+/* ============ SETTINGS ============ */
+.settings-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.setting-row{display:flex;align-items:center;gap:13px;padding:13px 0;border-bottom:1px solid rgba(148,163,184,.08)}
+.setting-row:last-child{border-bottom:none;padding-bottom:2px}
+.setting-ic{width:36px;height:36px;flex:0 0 auto;border-radius:10px;display:flex;align-items:center;justify-content:center}
+.setting-name{font:600 12px 'Inter';color:#e8eefb}
+.setting-desc{font-size:10.5px;color:var(--muted);margin-top:2px;line-height:1.45}
+.danger-zone{border:1px solid rgba(244,63,94,.3);border-radius:var(--radius);background:linear-gradient(160deg,rgba(76,13,28,.32),rgba(14,7,14,.5));padding:18px 20px;margin-top:16px;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}
+
+/* ============ MODALS ============ */
+.modal-backdrop{position:fixed;inset:0;z-index:90;background:rgba(2,6,17,.72);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);display:flex;align-items:center;justify-content:center;padding:22px;opacity:0;pointer-events:none;transition:opacity .28s}
+.modal-backdrop.open{opacity:1;pointer-events:auto}
+.modal{background:linear-gradient(170deg,#101b33,#0a1120);border:1px solid var(--border2);border-radius:20px;width:100%;max-width:540px;max-height:92vh;overflow-y:auto;box-shadow:0 40px 90px rgba(0,0,0,.65),0 0 0 1px rgba(34,211,238,.06),inset 0 1px 0 rgba(255,255,255,.06);transform:translateY(22px) scale(.96);transition:transform .34s cubic-bezier(.2,.9,.3,1.06)}
+.modal-backdrop.open .modal{transform:none}
+.modal-head{display:flex;align-items:center;gap:12px;padding:18px 22px;border-bottom:1px solid var(--border)}
+.modal-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.modal-head h3{font:600 15px var(--disp);letter-spacing:-.01em;color:#f0f6ff}
+.modal-head p{font-size:11px;color:var(--muted);margin-top:1px}
+.modal-close{margin-left:auto}
+.modal-body{padding:20px 22px}
+.modal-foot{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:15px 22px;border-top:1px solid var(--border)}
+
+/* share modal specifics */
+.field-label{font:600 9px var(--mono);letter-spacing:.2em;color:var(--muted);margin:14px 0 7px}
+.field-label:first-child{margin-top:0}
+.dark-select,.dark-input{width:100%;height:40px;background:rgba(15,23,42,.7);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-size:12.5px;padding:0 12px;outline:none;transition:border .2s}
+.dark-select:focus,.dark-input:focus{border-color:rgba(34,211,238,.45);box-shadow:0 0 0 3px rgba(34,211,238,.08)}
+.perm-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.perm-card{position:relative;border:1px solid var(--border2);border-radius:13px;padding:11px 11px 10px;cursor:pointer;transition:all .2s;background:rgba(15,23,42,.45)}
+.perm-card input{position:absolute;opacity:0;pointer-events:none}
+.perm-card:hover{border-color:rgba(148,163,184,.4);transform:translateY(-1px)}
+.perm-card.selected{border-color:rgba(34,211,238,.5);background:rgba(34,211,238,.07);box-shadow:0 0 0 1px rgba(34,211,238,.4),0 10px 28px rgba(34,211,238,.1)}
+.perm-ic{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;color:#67e8f9;background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.25)}
+.perm-card.selected .perm-ic{background:rgba(34,211,238,.18)}
+.perm-name{font:600 11px 'Inter';color:#e9eefb}
+.perm-desc{font-size:9px;color:var(--muted);margin-top:3px;line-height:1.4}
+.share-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+.expiry-seg{display:flex;gap:6px;flex-wrap:wrap}
+.expiry-opt{height:32px;padding:0 13px;border-radius:9px;border:1px solid var(--border2);background:rgba(15,23,42,.5);color:var(--muted);font:600 11px var(--mono);cursor:pointer;transition:all .18s}
+.expiry-opt.active{background:rgba(34,211,238,.14);border-color:rgba(34,211,238,.5);color:#67e8f9}
+.toggle-line{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid rgba(148,163,184,.08)}
+.toggle-line:last-child{border-bottom:none}
+.toggle-line span{font-size:11.5px;color:#d3dded}
+.toggle-line small{display:block;font-size:9.5px;color:var(--faint)}
+.pw-field{margin-top:9px}
+.link-result{margin-top:16px;border:1px solid rgba(52,211,153,.35);background:rgba(52,211,153,.06);border-radius:13px;padding:13px 14px;animation:pageIn .4s}
+.link-result-head{display:flex;align-items:center;gap:8px;font:600 9.5px var(--mono);letter-spacing:.16em;color:#6ee7b7;margin-bottom:9px}
+.link-row{display:flex;gap:8px}
+.link-row input{flex:1;min-width:0;height:38px;background:rgba(4,10,20,.7);border:1px solid rgba(52,211,153,.3);border-radius:9px;color:#8df0c4;font:500 10.5px var(--mono);padding:0 11px;outline:none}
+.link-meta{font-size:9.5px;color:#5e8a76;margin-top:8px;font-family:var(--mono);letter-spacing:.02em}
+
+/* upload modal */
+.dropzone{border:1.5px dashed rgba(34,211,238,.35);border-radius:16px;background:rgba(34,211,238,.04);padding:30px 20px;text-align:center;cursor:pointer;transition:all .25s}
+.dropzone:hover,.dropzone.dragover{background:rgba(34,211,238,.09);border-color:rgba(34,211,238,.6);box-shadow:inset 0 0 34px rgba(34,211,238,.06)}
+.dropzone h4{font:600 13px 'Inter';color:#d8ecff;margin:10px 0 3px}
+.dropzone p{font-size:10.5px;color:var(--muted)}
+.upload-item{display:flex;align-items:center;gap:11px;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:rgba(15,23,42,.45);margin-top:9px}
+.upload-item-body{flex:1;min-width:0}
+.upload-item-name{font:500 11.5px 'Inter';color:#e5ecf9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.upload-item-sub{font:500 9px var(--mono);color:var(--muted);margin:3px 0 6px}
+.upload-bar{height:4px;border-radius:3px;background:rgba(148,163,184,.13);overflow:hidden}
+.upload-bar-fill{height:100%;width:0%;background:linear-gradient(90deg,#22d3ee,#34d399);transition:width .14s linear}
+.upload-status{flex:0 0 auto;font:600 8.5px var(--mono);letter-spacing:.1em;color:var(--muted);display:flex;align-items:center;gap:6px}
+.upload-status.done{color:#6ee7b7}
+
+/* ============ ZERO-TRUST VERIFICATION MODAL ============ */
+.zt-modal{max-width:520px;overflow:hidden}
+.zt-head{display:flex;align-items:center;gap:13px;padding:17px 21px;border-bottom:1px solid var(--border);background:linear-gradient(90deg,rgba(34,211,238,.06),transparent)}
+.zt-head-ic{position:relative;width:46px;height:46px;flex:0 0 auto;border-radius:13px;display:flex;align-items:center;justify-content:center;background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.35);color:#22d3ee}
+.zt-head-ic::after{content:'';position:absolute;inset:-5px;border-radius:17px;border:1px solid rgba(34,211,238,.3);animation:ringPulse 2.2s ease-out infinite}
+@keyframes ringPulse{0%{opacity:.9;transform:scale(.92)}80%,100%{opacity:0;transform:scale(1.28)}}
+.zt-eyebrow{font:700 8px var(--mono);letter-spacing:.26em;color:var(--cyan)}
+.zt-fname{font:500 12px var(--mono);color:#eaf2ff;margin-top:3px;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.zt-verdict{display:none;align-items:center;gap:15px;margin:17px 21px 0;padding:14px 16px;border-radius:15px;animation:pageIn .45s}
+.zt-verdict.show{display:flex}
+.zt-verdict.granted{border:1px solid rgba(52,211,153,.42);background:linear-gradient(150deg,rgba(52,211,153,.13),rgba(52,211,153,.03));box-shadow:0 0 40px rgba(52,211,153,.09)}
+.zt-verdict.denied{border:1px solid rgba(251,113,133,.45);background:linear-gradient(150deg,rgba(251,113,133,.14),rgba(251,113,133,.03));box-shadow:0 0 40px rgba(251,113,133,.1)}
+.zt-verdict-ic{width:54px;height:54px;flex:0 0 auto;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.granted .zt-verdict-ic{background:rgba(52,211,153,.18);border:1px solid rgba(52,211,153,.5);color:#34d399;box-shadow:0 0 26px rgba(52,211,153,.3)}
+.denied .zt-verdict-ic{background:rgba(251,113,133,.18);border:1px solid rgba(251,113,133,.55);color:#fb7185;box-shadow:0 0 26px rgba(251,113,133,.32)}
+.zt-verdict-title{font:700 15px var(--disp);letter-spacing:.08em}
+.granted .zt-verdict-title{color:#6ee7b7}
+.denied .zt-verdict-title{color:#fda4af}
+.zt-verdict-sub{font-size:10.5px;color:#a9bcd6;margin-top:3px;line-height:1.5}
+.zt-steps{list-style:none;padding:17px 21px 6px;display:flex;flex-direction:column;gap:5px}
+.zstep{display:flex;gap:11px;align-items:center;padding:8px 11px;border-radius:12px;border:1px solid transparent;opacity:.32;transition:all .3s}
+.zstep.active{opacity:1;background:rgba(34,211,238,.055);border-color:rgba(34,211,238,.17)}
+.zstep.done,.zstep.fail{opacity:1}
+.zstep.fail{background:rgba(251,113,133,.06);border-color:rgba(251,113,133,.22)}
+.zs-ic{width:32px;height:32px;flex:0 0 auto;border-radius:9px;display:flex;align-items:center;justify-content:center;background:rgba(148,163,184,.07);border:1px solid var(--border);color:#8fa3bf}
+.zstep.done .zs-ic{color:#34d399;border-color:rgba(52,211,153,.3)}
+.zstep.fail .zs-ic{color:#fb7185;border-color:rgba(251,113,133,.35)}
+.zstep.active .zs-ic{color:#22d3ee;border-color:rgba(34,211,238,.35)}
+.zs-body{flex:1;min-width:0}
+.zs-title{font:600 11px 'Inter';color:#dfe8f8}
+.zs-detail{font:400 9.5px var(--mono);color:var(--muted);margin-top:2px;opacity:0;transform:translateY(3px);transition:all .35s;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.zstep.done .zs-detail,.zstep.fail .zs-detail{opacity:1;transform:none}
+.zs-status{flex:0 0 auto;width:26px;display:flex;justify-content:center}
+.zs-num{width:21px;height:21px;border-radius:50%;border:1px dashed var(--faint);color:var(--faint);font:600 9.5px var(--mono);display:flex;align-items:center;justify-content:center}
+.spin{width:15px;height:15px;border:2px solid rgba(34,211,238,.22);border-top-color:#22d3ee;border-radius:50%;animation:spin .65s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.pop{animation:popIn .38s cubic-bezier(.3,1.4,.4,1)}
+@keyframes popIn{0%{transform:scale(.3);opacity:0}70%{transform:scale(1.25)}100%{transform:scale(1);opacity:1}}
+.zt-risk-row{display:flex;align-items:center;gap:12px;padding:6px 21px 14px}
+.zt-risk-label{font:600 8px var(--mono);letter-spacing:.2em;color:var(--muted);flex:0 0 auto}
+.zt-risk-track{flex:1;height:7px;border-radius:4px;background:rgba(148,163,184,.13);overflow:hidden}
+.zt-risk-fill{height:100%;width:0%;border-radius:4px;background:linear-gradient(90deg,#34d399,#fbbf24 55%,#fb7185);transition:width 1.1s cubic-bezier(.2,.8,.3,1);box-shadow:0 0 12px rgba(251,113,133,.25)}
+.zt-risk-num{font:700 12px var(--mono);color:#ffd7a8;width:32px;text-align:right}
+.zt-stepup{margin:0 21px 4px;border:1px solid rgba(251,191,36,.4);background:rgba(251,191,36,.06);border-radius:13px;padding:13px 15px;animation:pageIn .4s}
+.zt-stepup-title{font:700 9px var(--mono);letter-spacing:.22em;color:#fde68a;margin-bottom:5px;display:flex;align-items:center;gap:7px}
+.zt-stepup p{font-size:10.5px;color:#c8bd97;line-height:1.5}
+.zt-stepup-row{display:flex;gap:9px;margin-top:10px}
+.zt-code{flex:1;height:44px;background:rgba(4,10,20,.7);border:1px solid rgba(251,191,36,.4);border-radius:11px;color:#fde68a;font:700 17px var(--mono);letter-spacing:.45em;text-align:center;outline:none;min-width:0}
+.zt-code:focus{box-shadow:0 0 0 3px rgba(251,191,36,.1)}
+.zt-code.shake{animation:shake .4s}
+@keyframes shake{0%,100%{transform:none}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+.zt-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 21px;border-top:1px solid var(--border);background:rgba(4,7,15,.35)}
+.zt-foot-note{font:500 9.5px var(--mono);color:var(--muted);letter-spacing:.02em;min-height:15px}
+.zt-foot-note.granting{color:#6ee7b7}
+.zt-foot-note.denying{color:#fda4af}
+
+/* ============ TOASTS ============ */
+#toasts{position:fixed;bottom:22px;right:22px;z-index:120;display:flex;flex-direction:column;gap:9px;max-width:min(390px,90vw)}
+.toast{display:flex;align-items:center;gap:11px;background:#0d1730;border:1px solid var(--border2);border-left:3px solid var(--emerald);border-radius:13px;padding:11px 13px;box-shadow:0 18px 46px rgba(0,0,0,.55);animation:toastIn .35s cubic-bezier(.2,1.1,.3,1)}
+@keyframes toastIn{from{opacity:0;transform:translateX(60px)}to{opacity:1;transform:none}}
+.toast.out{opacity:0;transform:translateX(60px);transition:all .3s}
+.toast-danger{border-left-color:#fb7185}
+.toast-info{border-left-color:#22d3ee}
+.toast-warn{border-left-color:#fbbf24}
+.toast-ic{flex:0 0 auto}
+.toast-msg{flex:1;font-size:11.5px;color:#dbe5f6;line-height:1.45}
+.toast-action{flex:0 0 auto;background:none;border:none;color:#67e8f9;font:700 10.5px var(--mono);letter-spacing:.05em;cursor:pointer;padding:5px 8px;border-radius:7px}
+.toast-action:hover{background:rgba(34,211,238,.1)}
+.toast-x{flex:0 0 auto;background:none;border:none;color:var(--faint);cursor:pointer;padding:4px}
+.toast-x:hover{color:var(--text)}
+
+/* ============ STATUS BAR / FOOTER ============ */
+.statusbar{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:11px 28px;border-top:1px solid var(--border);flex-wrap:wrap}
+.statusbar-left,.statusbar-right{display:flex;align-items:center;gap:14px;font:500 9px var(--mono);letter-spacing:.06em;color:var(--faint);flex-wrap:wrap}
+.status-item{display:flex;align-items:center;gap:6px}
+.status-ok{width:6px;height:6px;border-radius:50%;background:#34d399;box-shadow:0 0 6px rgba(52,211,153,.8)}
+
+/* overlays */
+.side-overlay{position:fixed;inset:0;z-index:44;background:rgba(2,6,17,.6);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .3s}
+body.sidebar-open .side-overlay{opacity:1;pointer-events:auto}
+
+/* ============ RESPONSIVE ============ */
+@media (max-width:1200px){.stat-grid{grid-template-columns:repeat(2,1fr)}.dash-row{grid-template-columns:1fr}.security-grid{grid-template-columns:1fr}}
+@media (max-width:1100px){
+  .app{grid-template-columns:82px minmax(0,1fr)}
+  .sidebar{width:82px;padding:18px 12px 14px;align-items:center}
+  .sb-text,.nav-label,.posture-card,.user-meta,.logo-sub{display:none}
+  .logo-block{padding:4px 0 14px;border-bottom:1px solid var(--border);justify-content:center}
+  .nav{align-items:center;width:100%}
+  .nav-item{justify-content:center;padding:0;width:46px;height:44px}
+  .nav-badge{position:absolute;top:-4px;right:-4px;margin:0;min-width:18px;height:16px;font-size:8px}
+  .nav-item{position:relative}
+  .user-chip{padding:6px;border:none;background:transparent}
+  .logout-btn{display:none}
+}
+@media (max-width:900px){
+  .app{grid-template-columns:1fr}
+  .sidebar{transform:translateX(-105%);width:272px;align-items:stretch;padding:20px 16px 16px}
+  body.sidebar-open .sidebar{transform:none;box-shadow:30px 0 80px rgba(0,0,0,.6)}
+  body.sidebar-open .sb-text,body.sidebar-open .nav-label,body.sidebar-open .posture-card,body.sidebar-open .user-meta,body.sidebar-open .logo-sub{display:block}
+  body.sidebar-open .logo-block{justify-content:flex-start}
+  body.sidebar-open .nav{align-items:stretch}
+  body.sidebar-open .nav-item{justify-content:flex-start;padding:0 12px;width:100%;height:40px}
+  body.sidebar-open .nav-badge{position:static;margin-left:auto;min-width:22px;height:19px;font-size:10px}
+  body.sidebar-open .user-chip{padding:10px;border:1px solid var(--border);background:rgba(15,23,42,.5)}
+  body.sidebar-open .logout-btn{display:flex}
+  .hamburger{display:inline-flex}
+  .main{grid-column:1}
+  .utc-clock{display:none}
+  .session-pill .session-label{display:none}
+  .content{padding:18px 16px 8px}
+  .topbar{padding:0 16px;gap:10px}
+  .statusbar{padding:11px 16px}
+  .settings-grid{grid-template-columns:1fr}
+  .share-cols{grid-template-columns:1fr}
+  .perm-grid{grid-template-columns:1fr 1fr 1fr;gap:7px}
+}
+@media (max-width:600px){
+  .stat-grid{grid-template-columns:1fr}
+  .page-title{font-size:21px}
+  .topbar .btn-primary span.lbl{display:none}
+  .topbar .btn-primary{padding:0 12px}
+  .search{max-width:none}
+  .kbd{display:none}
+  .perm-grid{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.001s !important;transition-duration:.001s !important}}
+</style>
+</head>
+<body>
+
+<div class="bg-fx"></div>
+<div class="bg-grid"></div>
+<div class="side-overlay" id="sideOverlay"></div>
+
+<div class="app">
+
+  <!-- ══════════ SIDEBAR ══════════ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="logo-block">
+      <div class="logo-mark">
+        <svg viewBox="0 0 48 48" width="44" height="44" fill="none">
+          <defs>
+            <linearGradient id="lg1" x1="8" y1="4" x2="40" y2="46">
+              <stop offset="0" stop-color="#22d3ee"/><stop offset="1" stop-color="#10b981"/>
+            </linearGradient>
+          </defs>
+          <path d="M24 2.5l17.5 7.4v13.3c0 11.3-7.4 21.6-17.5 24.7C13.9 44.8 6.5 34.5 6.5 23.2V9.9L24 2.5z" fill="url(#lg1)" fill-opacity="0.16" stroke="url(#lg1)" stroke-width="2.2" stroke-linejoin="round"/>
+          <path d="M24 14.5a4.6 4.6 0 0 0-2.3 8.6l-1.6 6.1a1.5 1.5 0 0 0 1.44 1.84h4.9a1.5 1.5 0 0 0 1.44-1.84l-1.6-6.1a4.6 4.6 0 0 0-3.78-8.6z" fill="#22d3ee"/>
+        </svg>
+        <div class="logo-scan"></div>
+      </div>
+      <div class="sb-text">
+        <div class="logo-text">Secure<em>Share</em></div>
+        <div class="logo-sub">ZERO-TRUST CLOUD</div>
+      </div>
+    </div>
+
+    <nav class="nav" id="mainNav">
+      <div class="nav-label">WORKSPACE</div>
+      <button class="nav-item active" data-page="dashboard">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="1.8"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.8"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.8"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.8"/></svg>
+        <span class="sb-text">Dashboard</span>
+      </button>
+      <button class="nav-item" data-page="files">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        <span class="sb-text">My Files</span>
+        <span class="nav-badge" id="filesBadge">12</span>
+      </button>
+      <button class="nav-item" data-page="links">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+        <span class="sb-text">Shared Links</span>
+        <span class="nav-badge" id="linksBadge">6</span>
+      </button>
+
+      <div class="nav-label">MONITOR</div>
+      <button class="nav-item" data-page="security">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+        <span class="sb-text">Security Center</span>
+        <span class="nav-badge danger" id="threatBadge">5</span>
+      </button>
+      <button class="nav-item" data-page="audit">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h6"/></svg>
+        <span class="sb-text">Audit Log</span>
+      </button>
+
+      <div class="nav-label">SYSTEM</div>
+      <button class="nav-item" data-page="settings">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span class="sb-text">Settings</span>
+      </button>
+    </nav>
+
+    <div class="posture-card">
+      <div class="posture-head">
+        <span class="posture-title">ORG POSTURE</span>
+        <span class="posture-live"><span class="pulse-dot"></span>LIVE</span>
+      </div>
+      <div class="posture-body">
+        <div class="posture-ring-wrap">
+          <svg width="92" height="92" viewBox="0 0 92 92">
+            <defs>
+              <linearGradient id="pgrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#22d3ee"/><stop offset="1" stop-color="#34d399"/>
+              </linearGradient>
+            </defs>
+            <circle cx="46" cy="46" r="38" stroke="rgba(148,163,184,.12)" stroke-width="7" fill="none"/>
+            <circle id="sidePostureRing" cx="46" cy="46" r="38" stroke="url(#pgrad)" stroke-width="7" fill="none" stroke-linecap="round" stroke-dasharray="238.76" stroke-dashoffset="238.76" transform="rotate(-90 46 46)" style="transition:stroke-dashoffset 1.4s cubic-bezier(.2,.8,.3,1), stroke .4s"/>
+          </svg>
+          <div class="posture-center"><b id="sidePosture">0</b><small>/100</small></div>
+        </div>
+        <div class="posture-meta">
+          <div class="posture-grade" id="postureGrade">Grade A · Excellent</div>
+          <div class="posture-note">All 6 policy layers compliant. Last deep scan 4 min ago across 1,284 files.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="user-chip">
+      <div class="avatar">AC</div>
+      <div class="user-meta sb-text" style="min-width:0">
+        <div class="user-name">Alex Chen</div>
+        <div class="user-role">CISO · alex@acme.com</div>
+      </div>
+      <button class="icon-btn logout-btn" id="logoutBtn" title="Lock session" style="margin-left:auto">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ══════════ MAIN COLUMN ══════════ -->
+  <div class="main">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <button class="icon-btn hamburger" id="hamburger" aria-label="Toggle sidebar">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <div class="search" role="search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input id="globalSearch" type="text" placeholder="Search files, links, audit events across the vault…" autocomplete="off" spellcheck="false">
+        <span class="kbd">⌘K</span>
+      </div>
+      <div class="topbar-right">
+        <div class="session-pill" id="sessionPill" title="Zero-trust sessions expire and re-validate continuously">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <div><div class="session-label">SESSION RE-VALIDATES IN</div><div class="session-time" id="sessionTimer">15:00</div></div>
+        </div>
+        <div class="utc-clock"><b id="utcClock">--:--:--</b><br>UTC · EU-CENTRAL</div>
+        <div class="bell-wrap">
+          <button class="icon-btn" id="bellBtn" aria-label="Notifications" style="width:40px;height:40px;border:1px solid var(--border2);border-radius:12px;color:#b9c6dc">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+          </button>
+          <span class="bell-badge" id="bellBadge">4</span>
+          <div class="notif-panel" id="notifPanel">
+            <div class="notif-head"><h4>Security Notifications</h4><span id="notifUnread">4 unread</span></div>
+            <div id="notifList"></div>
+            <div class="notif-foot"><button id="markAllRead">Mark all as read</button></div>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="uploadBtnTop">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
+          <span class="lbl">Upload</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <!-- ══════════ PAGE: DASHBOARD ══════════ -->
+      <section class="page active" id="page-dashboard">
+        <div class="page-head">
+          <div>
+            <div class="eyebrow">OVERVIEW / ZERO-TRUST</div>
+            <h1 class="page-title"><span id="greetingName">Good morning</span>, Alex</h1>
+            <p class="page-sub" id="greetingSub">Posture excellent — 1,847 verification checks passed in the last 24 hours. <span id="todayLine" class="mono" style="color:#8ee9f9"></span></p>
+          </div>
+          <button class="btn" id="headerPill" style="border-color:rgba(52,211,153,.4);color:#6ee7b7;cursor:default;pointer-events:none">
+            <span class="pulse-dot"></span><span class="mono" style="font-size:10.5px;letter-spacing:.14em" id="headerPillText">ZERO-TRUST ENFORCING</span>
+          </button>
+        </div>
+
+        <!-- Stat cards -->
+        <div class="stat-grid">
+          <div class="stat-card" style="--glow:rgba(34,211,238,.15)">
+            <div class="stat-top"><span class="stat-label">TOTAL FILES</span>
+              <div class="stat-ic tone-cyan"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div>
+            </div>
+            <div class="stat-value"><span data-count="1284">0</span></div>
+            <div class="stat-foot">
+              <span class="stat-trend trend-up"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 14l5-5 5 5"/></svg>+12.4% vs Nov</span>
+              <svg class="spark" width="86" height="26" viewBox="0 0 86 26"><polyline points="0,21 10,19 18,20 27,15 36,16 45,12 54,13 63,9 72,8 86,4" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".85"/><circle cx="86" cy="4" r="2.4" fill="#22d3ee"/></svg>
+            </div>
+          </div>
+          <div class="stat-card" style="--glow:rgba(167,139,250,.15)">
+            <div class="stat-top"><span class="stat-label">STORAGE USED</span>
+              <div class="stat-ic tone-violet"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></div>
+            </div>
+            <div class="stat-value"><span data-count="847">0</span><small>GB</small></div>
+            <div class="stat-foot" style="flex-direction:column;align-items:stretch;gap:5px">
+              <div class="pbar"><div class="pbar-fill" id="storageFill"></div></div>
+              <div style="display:flex;justify-content:space-between"><span class="stat-note">of 2 TB encrypted</span><span class="stat-note mono">42.3%</span></div>
+            </div>
+          </div>
+          <div class="stat-card" style="--glow:rgba(52,211,153,.15)">
+            <div class="stat-top"><span class="stat-label">ACTIVE SHARES</span>
+              <div class="stat-ic tone-emerald"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg></div>
+            </div>
+            <div class="stat-value"><span data-count="36">0</span></div>
+            <div class="stat-foot">
+              <span class="stat-trend trend-warn"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>6 expiring this week</span>
+              <svg class="spark" width="86" height="26" viewBox="0 0 86 26"><polyline points="0,18 12,17 22,18 32,14 42,15 52,12 62,11 74,8 86,7" fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".85"/><circle cx="86" cy="7" r="2.4" fill="#34d399"/></svg>
+            </div>
+          </div>
+          <div class="stat-card" style="--glow:rgba(251,113,133,.16)">
+            <div class="stat-top"><span class="stat-label">THREATS BLOCKED</span>
+              <div class="stat-ic tone-red"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg></div>
+            </div>
+            <div class="stat-value"><span id="threatsCount" data-count="17">0</span><small>/ 30d</small></div>
+            <div class="stat-foot">
+              <span class="stat-trend trend-warn"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>+4 this week</span>
+              <svg class="spark" width="86" height="26" viewBox="0 0 86 26"><polyline points="0,22 12,21 20,19 30,20 40,15 50,16 60,10 72,9 86,3" fill="none" stroke="#fb7185" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/><circle cx="86" cy="3" r="2.4" fill="#fb7185"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chart row -->
+        <div class="dash-row">
+          <div class="card">
+            <div class="card-head">
+              <div class="card-title"><span class="ct-dot"></span>Verification Activity — Access Decisions</div>
+              <div class="chart-legend">
+                <span class="leg"><i style="background:#22d3ee"></i>Allowed</span>
+                <span class="leg"><i style="background:#fbbf24"></i>Challenged</span>
+                <span class="leg"><i style="background:#fb7185"></i>Blocked</span>
+                <select class="range-select" id="rangeSelect"><option value="14">Last 14 days</option><option value="30">Last 30 days</option></select>
+              </div>
+            </div>
+            <div class="card-body" style="padding:10px 12px 14px"><div id="activityChart" style="width:100%;height:264px"></div></div>
+          </div>
+          <div class="card">
+            <div class="card-head">
+              <div class="card-title"><span class="ct-dot" style="background:#34d399;box-shadow:0 0 8px rgba(52,211,153,.7)"></span>Verdicts · Last 24h</div>
+              <button class="feed-btn" id="genReportBtn" style="display:flex;align-items:center;gap:6px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>24H REPORT</button>
+            </div>
+            <div class="card-body" style="padding-top:8px">
+              <div class="donut-wrap">
+                <div id="donutChart" style="width:190px;height:158px"></div>
+                <div class="donut-center"><b id="donutTotal">1,847</b><small>CHECKS · 24H</small></div>
+              </div>
+              <div class="donut-legend">
+                <div class="dl-row"><span class="dl-dot" style="background:#34d399"></span><span class="dl-name">Allowed — policy passed</span><span class="dl-val">1,712</span><span class="dl-pct">92.7%</span></div>
+                <div class="dl-row"><span class="dl-dot" style="background:#fbbf24"></span><span class="dl-name">Challenged — step-up MFA</span><span class="dl-val">118</span><span class="dl-pct">6.4%</span></div>
+                <div class="dl-row"><span class="dl-dot" style="background:#fb7185"></span><span class="dl-name">Denied — auto-quarantine</span><span class="dl-val">17</span><span class="dl-pct">0.9%</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent files + live feed -->
+        <div class="dash-row" style="grid-template-columns:minmax(0,1.85fr) minmax(0,1fr);margin-bottom:6px">
+          <div class="card">
+            <div class="card-head">
+              <div class="card-title"><span class="ct-dot" style="background:#a78bfa;box-shadow:0 0 8px rgba(167,139,250,.7)"></span>Recently Modified Files</div>
+              <button class="feed-btn" id="viewAllFiles" style="display:flex;align-items:center;gap:6px;color:#67e8f9;border-color:rgba(34,211,238,.3)">VIEW ALL FILES<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></button>
+            </div>
+            <div style="overflow-x:auto">
+              <table class="tbl">
+                <thead><tr><th>Name</th><th>Classification</th><th>Risk</th><th>Size</th></tr></thead>
+                <tbody id="recentFilesBody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head feed-head">
+              <div class="feed-live"><span class="pulse-dot"></span>LIVE — ZERO-TRUST EVENT STREAM</div>
+              <button class="feed-btn" id="feedPauseBtn">PAUSE</button>
+            </div>
+            <div class="card-body" style="padding-top:12px"><div class="feed-list" id="feedList"></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════ PAGE: FILES ══════════ -->
+      <section class="page" id="page-files">
+        <div class="page-head">
+          <div>
+            <div class="eyebrow">WORKSPACE / ENCRYPTED VAULT</div>
+            <h1 class="page-title">My Files</h1>
+            <p class="page-sub">AES-256-GCM at rest · every open re-verified through the zero-trust gateway.</p>
+          </div>
+          <button class="btn btn-primary" id="uploadBtnFiles">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
+            Upload File
+          </button>
+        </div>
+
+        <div class="files-toolbar">
+          <div class="chip-row" id="chipRow">
+            <button class="chip active" data-filter="all">All files</button>
+            <button class="chip" data-filter="starred">Starred</button>
+            <button class="chip" data-filter="Restricted">Restricted</button>
+            <button class="chip" data-filter="Confidential">Confidential</button>
+            <button class="chip" data-filter="Internal">Internal</button>
+          </div>
+          <select class="sort-select" id="sortSelect" aria-label="Sort files">
+            <option value="modified">Sort · Last modified</option>
+            <option value="name">Sort · Name A–Z</option>
+            <option value="size">Sort · Size</option>
+            <option value="risk">Sort · Risk score</option>
+          </select>
+          <div class="seg" role="group" aria-label="View mode">
+            <button id="gridViewBtn" class="active" title="Grid view"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></button>
+            <button id="listViewBtn" title="List view"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg></button>
+          </div>
+        </div>
+        <div class="files-meta" id="filesMeta">12 items · 468 MB · all scanned &amp; encrypted</div>
+
+        <div class="file-grid" id="fileGrid"></div>
+
+        <div class="file-list-wrap" id="fileListWrap" hidden>
+          <table class="tbl" style="min-width:760px">
+            <thead><tr><th>Name</th><th>Classification</th><th>Risk</th><th>Size</th><th>Modified</th><th style="text-align:right">Actions</th></tr></thead>
+            <tbody id="fileListBody"></tbody>
+          </table>
+        </div>
+
+        <div class="empty-state" id="filesEmpty" hidden>
+          <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#33415e" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/><path d="M8.5 11h5"/></svg>
+          <h4>No files match your filters</h4>
+          <p>Try clearing the search or switching classification filter.</p>
+        </div>
+      </section>
+
+      <!-- ══════════ PAGE: SHARED LINKS ══════════ -->
+      <section class="page" id="page-links">
+        <div class="page-head">
+          <div>
+            <div class="eyebrow">WORKSPACE / SECURE DISTRIBUTION</div>
+            <h1 class="page-title">Shared Links</h1>
+            <p class="page-sub">Time-boxed, permissioned and encrypted. Every open is re-authenticated and written to the immutable audit trail.</p>
+          </div>
+          <button class="btn btn-primary" id="newLinkBtn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            New Secure Link
+          </button>
+        </div>
+        <div class="card">
+          <div style="overflow-x:auto">
+            <table class="links-table">
+              <thead><tr><th>File</th><th>Link</th><th>Permission</th><th>Expires</th><th>Views</th><th>Downloads</th><th style="text-align:right">Actions</th></tr></thead>
+              <tbody id="linksBody"></tbody>
+            </table>
+          </div>
+          <div class="empty-state" id="linksEmpty" hidden>
+            <h4>No active share links</h4>
+            <p>Create a time-boxed secure link and every access will be verified.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════ PAGE: SECURITY CENTER ══════════ -->
+      <section class="page" id="page-security">
+        <div class="page-head">
+          <div>
+            <div class="eyebrow">MONITOR / DEFENSE IN DEPTH</div>
+            <h1 class="page-title">Security Center</h1>
+            <p class="page-sub">Six verification layers stand between any request and your data. Toggle safeguards and watch posture respond in real time.</p>
+          </div>
+        </div>
+
+        <div class="security-grid">
+          <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+            <!-- Policy layers -->
+            <div class="card">
+              <div class="card-head">
+                <div class="card-title"><span class="ct-dot"></span>Defense-in-Depth — Live Policy Layers</div>
+                <span class="mono" style="font-size:9px;color:var(--faint);letter-spacing:.1em">PASS RATE · 30D</span>
+              </div>
+              <div class="card-body" style="padding-top:8px" id="layersWrap">
+                <div class="layer-row">
+                  <div class="layer-ic tone-cyan"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M16 11l2 2 4-4"/></svg></div>
+                  <div class="layer-body"><div class="layer-top"><span class="layer-name">Identity &amp; Authentication</span><span class="layer-rate">99.9%</span></div><div class="layer-bar"><div class="layer-fill" style="width:99.9%"></div></div><div class="layer-desc">Phishing-resistant MFA · FIDO2 · continuous token binding</div></div>
+                  <span class="layer-chip ok">COMPLIANT</span>
+                </div>
+                <div class="layer-row">
+                  <div class="layer-ic tone-emerald"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M2 20h20"/></svg></div>
+                  <div class="layer-body"><div class="layer-top"><span class="layer-name">Device Posture</span><span class="layer-rate" id="rateDevice">99.1%</span></div><div class="layer-bar"><div class="layer-fill" id="layerDevice" style="width:99.1%"></div></div><div class="layer-desc">Managed, encrypted endpoints · EDR healthy · MDM verified</div></div>
+                  <span class="layer-chip ok" id="chipDevice">COMPLIANT</span>
+                </div>
+                <div class="layer-row">
+                  <div class="layer-ic tone-violet"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
+                  <div class="layer-body"><div class="layer-top"><span class="layer-name">Network &amp; Geo-Fence</span><span class="layer-rate" id="rateGeo">98.7%</span></div><div class="layer-bar"><div class="layer-fill" id="layerGeo" style="width:98.7%"></div></div><div class="layer-desc">IP allowlist · corporate VPN · impossible-travel detection</div></div>
+                  <span class="layer-chip ok" id="chipGeo">COMPLIANT</span>
+                </div>
+                <div class="layer-row">
+                  <div class="layer-ic tone-cyan"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+                  <div class="layer-body"><div class="layer-top"><span class="layer-name">Behavioral Baseline</span><span class="layer-rate" id="rateBehavior">97.4%</span></div><div class="layer-bar"><div class="layer-fill" id="layerBehavior" style="width:97.4%"></div></div><div class="layer-desc">90-day profile · velocity, sequence &amp; temporal anomaly ML</div></div>
+                  <span class="layer-chip ok" id="chipBehavior">COMPLIANT</span>
+                </div>
+                <div class="layer-row">
+                  <div class="layer-ic tone-red"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/><path d="M8.5 11l2 2 3.5-3.5"/></svg></div>
+                  <div class="layer-body"><div class="layer-top"><span class="layer-name">Data Loss Prevention</span><span class="layer-rate" id="rateDlp">99.8%</span></div><div class="layer-bar"><div class="layer-fill" id="layerDlp" style="width:99.8%"></div></div><div class="layer-desc">Content inspection · secrets &amp; PII detection · exfil blocking</div></div>
+                  <span class="layer-chip ok" id="chipDlp">COMPLIANT</span>
+                </div>
+                <div class="layer-row">
+                  <div class="layer-ic tone-violet"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="4.5"/><path d="M11 12L21 2M15 6l3 3M13 8l2.5 2.5"/></svg></div>
+                  <div class="layer-body"><div class="layer-top"><span class="layer-name">Access Policy Engine</span><span class="layer-rate" id="rateJit">98.2%</span></div><div class="layer-bar"><div class="layer-fill" id="layerJit" style="width:98.2%"></div></div><div class="layer-desc">Least privilege · just-in-time grants · deny-by-default ZTA-114</div></div>
+                  <span class="layer-chip ok" id="chipJit">COMPLIANT</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Policy engine toggles -->
+            <div class="card">
+              <div class="card-head"><div class="card-title"><span class="ct-dot" style="background:#fbbf24;box-shadow:0 0 8px rgba(251,191,36,.6)"></span>Policy Engine — Live Safeguards</div><span class="mono" style="font-size:9px;color:var(--faint);letter-spacing:.1em">CHANGES APPLY INSTANTLY</span></div>
+              <div class="card-body" style="padding-top:8px">
+                <div class="policy-row">
+                  <div class="policy-body"><div class="policy-name">Identity MFA Everywhere<span class="enforced-chip">ENFORCED</span></div><div class="policy-desc">Phishing-resistant authentication cannot be disabled under SOC 2 control CC6.1.</div></div>
+                </div>
+                <div class="policy-row">
+                  <div class="policy-body"><div class="policy-name">Device Posture Compliance</div><div class="policy-desc">Block any endpoint without MDM enrollment, disk encryption and healthy EDR.</div></div>
+                  <label class="switch"><input type="checkbox" class="policy-switch" data-layer="Device" data-weight="12" data-label="Device Posture Compliance" checked><span class="sl"></span></label>
+                </div>
+                <div class="policy-row">
+                  <div class="policy-body"><div class="policy-name">Geo-Fence &amp; IP Allowlist</div><div class="policy-desc">Permit access only from EU-Central + US-East corporate ranges. Impossible travel auto-denies.</div></div>
+                  <label class="switch"><input type="checkbox" class="policy-switch" data-layer="Geo" data-weight="9" data-label="Geo-Fence & IP Allowlist" checked><span class="sl"></span></label>
+                </div>
+                <div class="policy-row">
+                  <div class="policy-body"><div class="policy-name">Behavioral Anomaly Detection</div><div class="policy-desc">ML baseline flags impossible velocities, unusual sequences and off-hours bulk access.</div></div>
+                  <label class="switch"><input type="checkbox" class="policy-switch" data-layer="Behavior" data-weight="8" data-label="Behavioral Anomaly Detection" checked><span class="sl"></span></label>
+                </div>
+                <div class="policy-row">
+                  <div class="policy-body"><div class="policy-name">Data Loss Prevention Engine</div><div class="policy-desc">Scan every payload for secrets, credentials, PII and regulated data before release.</div></div>
+                  <label class="switch"><input type="checkbox" class="policy-switch" data-layer="Dlp" data-weight="12" data-label="Data Loss Prevention Engine" checked><span class="sl"></span></label>
+                </div>
+                <div class="policy-row">
+                  <div class="policy-body"><div class="policy-name">Least-Privileged JIT Access</div><div class="policy-desc">Just-in-time elevation with expiring grants — no standing access to Restricted data.</div></div>
+                  <label class="switch"><input type="checkbox" class="policy-switch" data-layer="Jit" data-weight="10" data-label="Least-Privileged JIT Access" checked><span class="sl"></span></label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Blocks by category chart -->
+            <div class="card">
+              <div class="card-head"><div class="card-title"><span class="ct-dot" style="background:#fb7185;box-shadow:0 0 8px rgba(251,113,133,.7)"></span>Why Access Was Blocked — 30 Days</div></div>
+              <div class="card-body" style="padding:8px 12px 14px"><div id="blocksChart" style="width:100%;height:198px"></div></div>
+            </div>
+          </div>
+
+          <!-- Right column -->
+          <div style="display:flex;flex-direction:column;min-width:0">
+            <div class="sim-card">
+              <div class="sim-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>ADVERSARY SIMULATION</div>
+              <h3>Test the zero-trust gateway</h3>
+              <p>Simulate a hostile insider exfiltrating <b style="color:#ffe4e6">customer-data-export.csv</b> from an unmanaged device — impossible travel, 40× velocity, no EDR. Watch policy ZTA-114 deny, quarantine and log every layer.</p>
+              <button class="btn-sim" id="runSimBtn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                LAUNCH EXFILTRATION SIMULATION
+              </button>
+              <div class="sim-note">SIMULATED ACTOR 45.155.9.71 · NO REAL SESSIONS AFFECTED</div>
+            </div>
+
+            <div class="card" style="flex:1">
+              <div class="card-head"><div class="card-title"><span class="ct-dot" style="background:#fb7185;box-shadow:0 0 8px rgba(251,113,133,.7)"></span>Blocked Access Attempts</div><span class="mono" style="font-size:9px;color:#fda4af;letter-spacing:.1em" id="blockedCount">5 OPEN</span></div>
+              <div class="card-body" style="padding-top:12px" id="blockedList"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════ PAGE: AUDIT LOG ══════════ -->
+      <section class="page" id="page-audit">
+        <div class="page-head">
+          <div>
+            <div class="eyebrow">MONITOR / IMMUTABLE RECORD</div>
+            <h1 class="page-title">Audit Log</h1>
+            <p class="page-sub">Cryptographically signed, append-only record of every decision the zero-trust gateway has made.</p>
+          </div>
+          <button class="btn" id="exportCsvBtn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+            Export CSV
+          </button>
+        </div>
+        <div class="audit-toolbar">
+          <div class="seg audit-seg" role="group">
+            <button class="audit-filter active" data-f="all">All <span class="cnt" id="cntAll">0</span></button>
+            <button class="audit-filter" data-f="Allowed">Allowed <span class="cnt" id="cntAllowed">0</span></button>
+            <button class="audit-filter" data-f="Challenged">Challenged <span class="cnt" id="cntChallenged">0</span></button>
+            <button class="audit-filter" data-f="Denied">Denied <span class="cnt" id="cntDenied">0</span></button>
+          </div>
+          <div class="audit-search">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7d8ca3" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <input id="auditSearch" type="text" placeholder="Filter by user, event, resource, IP…" autocomplete="off" spellcheck="false">
+          </div>
+        </div>
+        <div class="audit-wrap">
+          <table class="audit-table">
+            <thead><tr><th>Timestamp</th><th>Principal</th><th>Event</th><th>Resource</th><th>Result</th><th>Source IP</th></tr></thead>
+            <tbody id="auditBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ══════════ PAGE: SETTINGS ══════════ -->
+      <section class="page" id="page-settings">
+        <div class="page-head">
+          <div>
+            <div class="eyebrow">SYSTEM / WORKSPACE GOVERNANCE</div>
+            <h1 class="page-title">Settings</h1>
+            <p class="page-sub">Encryption invariants, session policy and data-loss prevention. Locked controls are enforced by SOC 2 Type II.</p>
+          </div>
+        </div>
+        <div class="settings-grid">
+          <div class="card">
+            <div class="card-head"><div class="card-title"><span class="ct-dot"></span>Encryption &amp; Keys</div></div>
+            <div class="card-body" style="padding-top:8px">
+              <div class="setting-row">
+                <div class="setting-ic tone-cyan"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+                <div style="flex:1"><div class="setting-name">AES-256-GCM at rest</div><div class="setting-desc">Envelope-encrypted objects, keys sealed in HSM-2 (FIPS 140-2 Level 3).</div></div>
+                <span class="enforced-chip">ENFORCED</span>
+              </div>
+              <div class="setting-row">
+                <div class="setting-ic tone-emerald"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+                <div style="flex:1"><div class="setting-name">TLS 1.3 in transit</div><div class="setting-desc">Forward secrecy, HSTS preloaded, certificate pinning on all clients.</div></div>
+                <span class="enforced-chip">ENFORCED</span>
+              </div>
+              <div class="setting-row">
+                <div class="setting-ic tone-violet"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="4.5"/><path d="M11 12L21 2M15 6l3 3M13 8l2.5 2.5"/></svg></div>
+                <div style="flex:1"><div class="setting-name">Customer-managed keys (BYOK)</div><div class="setting-desc">Bring your own KMS key. Disabling reverts to HSM-managed keys.</div></div>
+                <label class="switch"><input type="checkbox" class="pref-switch" data-label="Customer-managed keys (BYOK)" checked><span class="sl"></span></label>
+              </div>
+              <div class="setting-row">
+                <div class="setting-ic tone-cyan"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><path d="M6 6h.01M6 18h.01"/></svg></div>
+                <div style="flex:1"><div class="setting-name">90-day HSM key rotation</div><div class="setting-desc">Automated rotation with zero-downtime re-wrap. Last run 6 hours ago.</div></div>
+                <span class="enforced-chip">ENFORCED</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><div class="card-title"><span class="ct-dot" style="background:#a78bfa;box-shadow:0 0 8px rgba(167,139,250,.7)"></span>Sessions &amp; Access</div></div>
+            <div class="card-body" style="padding-top:8px">
+              <div class="setting-row">
+                <div class="setting-ic tone-cyan"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+                <div style="flex:1"><div class="setting-name">Idle timeout</div><div class="setting-desc">Zero-trust re-validation interval for idle sessions.</div></div>
+                <select class="range-select" id="idleTimeout" style="height:36px;font-size:11px"><option>5 minutes</option><option selected>15 minutes</option><option>30 minutes</option><option>60 minutes</option></select>
+              </div>
+              <div class="setting-row">
+                <div class="setting-ic tone-red"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></div>
+                <div style="flex:1"><div class="setting-name">Revoke all active sessions</div><div class="setting-desc">17 live tokens across 6 managed devices will be invalidated immediately.</div></div>
+                <button class="btn btn-danger-ghost" id="revokeSessionsBtn" style="height:34px;font-size:11px">Revoke all</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><div class="card-title"><span class="ct-dot" style="background:#34d399;box-shadow:0 0 8px rgba(52,211,153,.7)"></span>Data Loss Prevention</div></div>
+            <div class="card-body" style="padding-top:8px">
+              <div class="setting-row"><div class="setting-ic tone-emerald"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div><div style="flex:1"><div class="setting-name">Scan uploads for secrets &amp; PII</div><div class="setting-desc">Credentials, keys and regulated data patterns blocked pre-ingest.</div></div><label class="switch"><input type="checkbox" class="pref-switch" data-label="DLP upload scanning" checked><span class="sl"></span></label></div>
+              <div class="setting-row"><div class="setting-ic tone-red"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg></div><div style="flex:1"><div class="setting-name">Block executable payloads</div><div class="setting-desc">Refuse .exe, .msi, scripts and macro-enabled archives at the edge.</div></div><label class="switch"><input type="checkbox" class="pref-switch" data-label="Executable blocking" checked><span class="sl"></span></label></div>
+              <div class="setting-row"><div class="setting-ic tone-violet"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></div><div style="flex:1"><div class="setting-name">Watermark previews</div><div class="setting-desc">Burn user identity and timestamp into every rendered preview.</div></div><label class="switch"><input type="checkbox" class="pref-switch" data-label="Watermarked previews"><span class="sl"></span></label></div>
+              <div class="setting-row"><div class="setting-ic tone-cyan"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><div style="flex:1"><div class="setting-name">Disable clipboard in viewer</div><div class="setting-desc">Cut / copy disabled for Restricted classification previews.</div></div><label class="switch"><input type="checkbox" class="pref-switch" data-label="Clipboard lockdown in viewer" checked><span class="sl"></span></label></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><div class="card-title"><span class="ct-dot" style="background:#fbbf24;box-shadow:0 0 8px rgba(251,191,36,.6)"></span>Notifications &amp; Alerting</div></div>
+            <div class="card-body" style="padding-top:8px">
+              <div class="setting-row"><div class="setting-ic tone-red"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></div><div style="flex:1"><div class="setting-name">Blocked access alerts</div><div class="setting-desc">Page the on-call SOC within 30 seconds of any auto-quarantine.</div></div><label class="switch"><input type="checkbox" class="pref-switch" data-label="Blocked-access paging" checked><span class="sl"></span></label></div>
+              <div class="setting-row"><div class="setting-ic tone-amber"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div style="flex:1"><div class="setting-name">Policy change approval</div><div class="setting-desc">Two-person rule for any change to Restricted-class policy ZTA-114.</div></div><label class="switch"><input type="checkbox" class="pref-switch" data-label="Two-person policy approval" checked><span class="sl"></span></label></div>
+              <div class="setting-row"><div class="setting-ic tone-cyan"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div><div style="flex:1"><div class="setting-name">Weekly posture report</div><div class="setting-desc">Signed PDF digest to the board security committee every Monday.</div></div><label class="switch"><input type="checkbox" class="pref-switch" data-label="Weekly posture report" checked><span class="sl"></span></label></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="danger-zone">
+          <div>
+            <div style="font:700 10px var(--mono);letter-spacing:.2em;color:#fda4af;margin-bottom:5px">DANGER ZONE</div>
+            <div style="font-size:12px;color:#e3c4c9;line-height:1.5">Purge the workspace audit log. This action writes a signed attestation but <b>cannot be undone</b>.</div>
+          </div>
+          <button class="btn btn-danger-ghost" id="purgeAuditBtn">Purge Audit Log</button>
+        </div>
+      </section>
+
+    </main>
+
+    <footer class="statusbar">
+      <div class="statusbar-left">
+        <span>SECURESHARE CLOUD v4.2.1</span>
+        <span class="status-item"><span class="status-ok"></span>EU-CENTRAL (FRA1)</span>
+        <span>SOC 2 TYPE II</span><span>ISO 27001</span><span>GDPR</span><span>C5</span>
+      </div>
+      <div class="statusbar-right">
+        <span class="status-item"><span class="status-ok"></span>HSM-2 CLUSTER HEALTHY</span>
+        <span>99.99% UPTIME · 90D</span>
+        <span>STATUS: ALL SYSTEMS OPERATIONAL</span>
+      </div>
+    </footer>
+  </div>
+</div>
+
+<!-- ══════════ SHARE MODAL ══════════ -->
+<div class="modal-backdrop" id="shareModal" role="dialog" aria-modal="true" aria-label="Share file securely">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-icon tone-cyan"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg></div>
+      <div><h3>Share Securely</h3><p>Encrypted link · time-boxed · every open re-verified</p></div>
+      <button class="icon-btn modal-close" id="shareCloseBtn" aria-label="Close"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="field-label">FILE</div>
+      <select class="dark-select" id="shareFileSelect"></select>
+
+      <div class="field-label">PERMISSION</div>
+      <div class="perm-grid" id="permGrid">
+        <label class="perm-card selected"><input type="radio" name="perm" value="Viewer" checked>
+          <div class="perm-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></div>
+          <div class="perm-name">Viewer</div><div class="perm-desc">Preview &amp; download only · no edit rights</div>
+        </label>
+        <label class="perm-card"><input type="radio" name="perm" value="Editor">
+          <div class="perm-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+          <div class="perm-name">Editor</div><div class="perm-desc">In-place edit &amp; comment · versioned history</div>
+        </label>
+        <label class="perm-card"><input type="radio" name="perm" value="Full">
+          <div class="perm-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></div>
+          <div class="perm-name">Full Control</div><div class="perm-desc">Manage · re-share · revoke · delete</div>
+        </label>
+      </div>
+
+      <div class="share-cols" style="margin-top:15px">
+        <div>
+          <div class="field-label" style="margin-top:0">EXPIRES AFTER</div>
+          <div class="expiry-seg" id="expirySeg">
+            <button class="expiry-opt" data-h="1">1 hour</button>
+            <button class="expiry-opt active" data-h="24">24 hours</button>
+            <button class="expiry-opt" data-h="168">7 days</button>
+            <button class="expiry-opt" data-h="720">30 days</button>
+          </div>
+        </div>
+        <div>
+          <div class="field-label" style="margin-top:0">SAFEGUARDS</div>
+          <div class="toggle-line"><span>Password protect<small>Required on top of zero-trust checks</small></span><label class="switch"><input type="checkbox" id="pwToggle"><span class="sl"></span></label></div>
+          <div class="toggle-line"><span>Watermark preview<small>Identity burned into render</small></span><label class="switch"><input type="checkbox" id="wmToggle" checked><span class="sl"></span></label></div>
+          <div class="toggle-line"><span>Allow download<small>Off = view-only streaming</small></span><label class="switch"><input type="checkbox" id="dlToggle" checked><span class="sl"></span></label></div>
+        </div>
+      </div>
+      <div class="pw-field" id="pwField" hidden>
+        <input class="dark-input" id="pwValue" type="text" placeholder="Set a strong password for this link…" autocomplete="off" spellcheck="false">
+      </div>
+
+      <div class="link-result" id="linkResult" hidden>
+        <div class="link-result-head"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>SECURE LINK ACTIVE</div>
+        <div class="link-row">
+          <input id="generatedLink" readonly value="">
+          <button class="btn btn-primary" id="copyLinkBtn" style="height:38px;padding:0 14px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>
+        </div>
+        <div class="link-meta" id="shareResultMeta">Expires in 24h · AES-256 · every open re-verified &amp; logged</div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" id="shareModalCancel">Cancel</button>
+      <button class="btn btn-primary" id="generateLinkBtn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 3.5v6c0 5-3.4 9.6-8 11.5C7.4 21.1 4 16.5 4 11.5v-6L12 2z"/></svg>Generate Secure Link</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ UPLOAD MODAL ══════════ -->
+<div class="modal-backdrop" id="uploadModal" role="dialog" aria-modal="true" aria-label="Upload files">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-icon tone-emerald"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg></div>
+      <div><h3>Secure Upload</h3><p>Encrypted client-side before leaving your device</p></div>
+      <button class="icon-btn modal-close" id="uploadCloseBtn" aria-label="Close"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="dropzone" id="dropZone" role="button" tabindex="0" aria-label="Browse files">
+        <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto;opacity:.85"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
+        <h4>Drag &amp; drop files here</h4>
+        <p>or <span style="color:#67e8f9;font-weight:600;text-decoration:underline">browse your device</span> — up to 512 MB per file</p>
+        <p style="margin-top:8px;font-family:var(--mono);font-size:8.5px;letter-spacing:.14em;color:#4e5f7d">CHUNKED · AES-256-GCM · DLP-SCANNED · ZERO-KNOWLEDGE</p>
+      </div>
+      <input type="file" id="fileInput" multiple hidden>
+      <div id="uploadList"></div>
+    </div>
+    <div class="modal-foot">
+      <span class="mono" id="uploadCount" style="margin-right:auto;font-size:10px;color:var(--muted)">0 files queued</span>
+      <button class="btn" id="cancelUpload">Cancel</button>
+      <button class="btn btn-primary" id="confirmUpload" disabled><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Done — Add to Vault</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ ZERO-TRUST VERIFICATION MODAL ══════════ -->
+<div class="modal-backdrop" id="ztModal" role="dialog" aria-modal="true" aria-label="Zero-trust verification">
+  <div class="modal zt-modal">
+    <div class="zt-head">
+      <div class="zt-head-ic"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+      <div style="min-width:0">
+        <div class="zt-eyebrow">ZERO-TRUST ACCESS GATEWAY</div>
+        <div class="zt-fname" id="ztFileName">file.pdf</div>
+      </div>
+      <button class="icon-btn modal-close" id="ztCloseBtn" aria-label="Close" style="margin-left:auto"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+
+    <div class="zt-verdict" id="ztVerdict">
+      <div class="zt-verdict-ic" id="ztVerdictIcon"></div>
+      <div style="min-width:0">
+        <div class="zt-verdict-title" id="ztVerdictTitle">ACCESS GRANTED</div>
+        <div class="zt-verdict-sub" id="ztVerdictSub">Decryption key released by HSM-2.</div>
+      </div>
+    </div>
+
+    <ol class="zt-steps" id="ztSteps"></ol>
+
+    <div class="zt-risk-row">
+      <span class="zt-risk-label">AGGREGATE RISK</span>
+      <div class="zt-risk-track"><div class="zt-risk-fill" id="ztRiskFill"></div></div>
+      <span class="zt-risk-num" id="ztRiskValue">0</span>
+    </div>
+
+    <div class="zt-stepup" id="ztStepup" hidden>
+      <div class="zt-stepup-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>STEP-UP AUTHENTICATION REQUIRED</div>
+      <p>Restricted classification demands a second factor. Enter the 6-digit code from your authenticator app.</p>
+      <div class="zt-stepup-row">
+        <input class="zt-code" id="ztCodeInput" maxlength="6" inputmode="numeric" autocomplete="one-time-code" placeholder="------">
+        <button class="btn btn-primary" id="ztVerifyBtn" style="height:44px">Verify</button>
+      </div>
+    </div>
+
+    <div class="zt-foot">
+      <span class="zt-foot-note" id="ztFooterNote">Establishing encrypted channel…</span>
+      <button class="btn" id="ztFooterBtn" disabled>Verifying…</button>
+    </div>
+  </div>
+</div>
+
+<div id="toasts" aria-live="polite"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   SECURESHARE CLOUD — Application Logic
+   ═══════════════════════════════════════════════════════════════ */
+'use strict';
+const $  = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const MB = 1024 * 1024;
+const NOW = Date.now();
+
+/* ---------- Utilities ---------- */
+function fmtSize(b){
+  if (b < 1024) return b + ' B';
+  const units = ['KB','MB','GB']; let i = -1;
+  do { b /= 1024; i++; } while (b >= 1024 && i < units.length - 1);
+  return (b >= 100 ? b.toFixed(0) : b.toFixed(1)) + ' ' + units[i];
+}
+function timeAgo(ts){
+  const s = (Date.now() - ts) / 1000;
+  if (s < 60) return 'just now';
+  const m = s / 60; if (m < 60) return Math.floor(m) + 'm ago';
+  const h = m / 60; if (h < 24) return Math.floor(h) + 'h ago';
+  const d = h / 24; if (d < 30) return Math.floor(d) + 'd ago';
+  return new Date(ts).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+}
+function fmtClock(ts){ return new Date(ts).toLocaleTimeString('en-GB',{hour12:false}); }
+function fmtStamp(ts){
+  const d = new Date(ts), now = new Date();
+  const sameDay = d.toDateString() === now.toDateString();
+  const y = new Date(now); y.setDate(now.getDate() - 1);
+  const yest = d.toDateString() === y.toDateString();
+  const day = sameDay ? 'Today' : yest ? 'Yest.' : d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
+  return day + ' ' + d.toLocaleTimeString('en-GB',{hour12:false});
+}
+function seededRand(seed){ let s = seed; return () => { s = (s * 9301 + 49297) % 233280; return s / 233280; }; }
+function randId(n){ const c = 'abcdefghjkmnpqrstuvwxyz23456789'; let s = ''; for (let i=0;i<(n||7);i++) s += c[Math.floor(Math.random()*c.length)]; return s; }
+function riskClass(r){ return r >= 55 ? 'high' : r >= 25 ? 'medium' : 'low'; }
+function riskLabel(r){ return r >= 55 ? 'High' : r >= 25 ? 'Medium' : 'Low'; }
+function ficClass(ext){ const k = ext.toLowerCase(); return ['pdf','xlsx','csv','docx','zip','mp4','png','fig','txt'].includes(k) ? 'fic-' + k : 'fic-txt'; }
+
+/* ---------- DATA ---------- */
+let files = [
+  {id:1, name:'Q4-Financial-Forecast.xlsx',   ext:'xlsx', size:4.2*MB,  mod:NOW-12*60e3,   owner:'You',        cls:'Restricted',   risk:82, dl:14,  shares:2, star:true},
+  {id:2, name:'customer-data-export.csv',     ext:'csv',  size:6.8*MB,  mod:NOW-34*60e3,   owner:'You',        cls:'Restricted',   risk:78, dl:3,   shares:0, star:false},
+  {id:3, name:'encryption-rotation-runbook.txt',ext:'txt',size:88*1024, mod:NOW-58*60e3,   owner:'M. Alvarez', cls:'Restricted',   risk:64, dl:6,   shares:1, star:false},
+  {id:4, name:'security-audit-2025.pdf',      ext:'pdf',  size:2.1*MB,  mod:NOW-3*3600e3,  owner:'S. Chen',    cls:'Confidential', risk:28, dl:41,  shares:4, star:true},
+  {id:5, name:'vendor-contract-acme.pdf',     ext:'pdf',  size:1.4*MB,  mod:NOW-5*3600e3,  owner:'You',        cls:'Confidential', risk:45, dl:12,  shares:3, star:false},
+  {id:6, name:'Product-Roadmap-2026.pdf',     ext:'pdf',  size:3.6*MB,  mod:NOW-26*3600e3, owner:'You',        cls:'Confidential', risk:22, dl:89,  shares:6, star:true},
+  {id:7, name:'onboarding-final-cut.mp4',     ext:'mp4',  size:248*MB,  mod:NOW-30*3600e3, owner:'L. Nguyen',  cls:'Confidential', risk:18, dl:67,  shares:2, star:false},
+  {id:8, name:'brand-assets-v3.zip',          ext:'zip',  size:156*MB,  mod:NOW-2*86400e3, owner:'A. Kowalski',cls:'Internal',     risk:12, dl:134, shares:5, star:false},
+  {id:9, name:'Employee-Handbook-2025.pdf',   ext:'pdf',  size:5.2*MB,  mod:NOW-3*86400e3, owner:'People Ops', cls:'Internal',     risk:5,  dl:342, shares:9, star:false},
+  {id:10,name:'api-gateway-architecture.png', ext:'png',  size:2.8*MB,  mod:NOW-4*86400e3, owner:'D. Okafor',  cls:'Internal',     risk:9,  dl:28,  shares:1, star:false},
+  {id:11,name:'press-release-draft.docx',     ext:'docx', size:340*1024,mod:NOW-5*86400e3, owner:'Comms Team', cls:'Internal',     risk:7,  dl:51,  shares:2, star:false},
+  {id:12,name:'design-system-tokens.fig',     ext:'fig',  size:18*MB,   mod:NOW-6*86400e3, owner:'M. Alvarez', cls:'Internal',     risk:11, dl:73,  shares:3, star:false}
+];
+let links = [
+  {id:'a3f9k2m', file:'Product-Roadmap-2026.pdf',    ext:'pdf', perm:'Viewer', exp:'in 6 days',   views:214,  dls:89,  pw:false, wm:true},
+  {id:'x72mzp1', file:'brand-assets-v3.zip',         ext:'zip', perm:'Editor', exp:'in 23 hours', views:98,   dls:64,  pw:false, wm:false},
+  {id:'q8w2vn4', file:'Employee-Handbook-2025.pdf',  ext:'pdf', perm:'Viewer', exp:'in 12 days',  views:1024, dls:342, pw:false, wm:true},
+  {id:'j5t8yh3', file:'security-audit-2025.pdf',     ext:'pdf', perm:'Viewer', exp:'in 4 days',   views:57,   dls:41,  pw:true,  wm:true},
+  {id:'p1d6gf8', file:'api-gateway-architecture.png',ext:'png', perm:'Viewer', exp:'in 2 days',   views:33,   dls:12,  pw:false, wm:false},
+  {id:'z9c4bs6', file:'press-release-draft.docx',    ext:'docx',perm:'Editor', exp:'in 5 days',   views:19,   dls:7,   pw:true,  wm:false}
+];
+let blocked = [
+  {id:1, ip:'185.220.14.6',  geo:'Tor exit node · Frankfurt, DE', reason:'Impossible travel — Berlin to Lagos in 13 min', target:'Q4-Financial-Forecast.xlsx', time:NOW-2*60e3,  q:false},
+  {id:2, ip:'84.121.90.113', geo:'Manchester, UK',                reason:'Non-compliant device · EDR not installed',      target:'customer-data-export.csv',   time:NOW-18*60e3, q:false},
+  {id:3, ip:'45.155.205.233',geo:'Moscow, RU',                    reason:'Policy ZTA-114 · Restricted classification',    target:'encryption-rotation-runbook.txt', time:NOW-62*60e3, q:false},
+  {id:4, ip:'193.32.162.157',geo:'Amsterdam, NL',                 reason:'Behavioral anomaly · 40× download velocity',    target:'vendor-contract-acme.pdf',   time:NOW-3*3600e3,q:false},
+  {id:5, ip:'103.75.190.28', geo:'Shenzhen, CN',                  reason:'Excessive download rate · DLP threshold trip',  target:'security-audit-2025.pdf',    time:NOW-6*3600e3,q:false}
+];
+const m=60e3, h=3600e3, d=86400e3;
+let audit = [
+  {t:NOW-2*m,  user:'alex.chen@acme.com', event:'FILE_ACCESS',   resource:'Q4-Financial-Forecast.xlsx',            result:'Allowed',    ip:'84.17.46.12'},
+  {t:NOW-6*m,  user:'system',             event:'MFA_CHALLENGE', resource:'step-up · authenticator (TOTP)',        result:'Challenged', ip:'84.17.46.12'},
+  {t:NOW-14*m, user:'alex.chen@acme.com', event:'SHARE_CREATED', resource:'Product-Roadmap-2026.pdf → s.chen@acme.com', result:'Allowed', ip:'84.17.46.12'},
+  {t:NOW-19*m, user:'unknown-principal',  event:'ACCESS_DENIED', resource:'customer-data-export.csv',              result:'Denied',     ip:'185.220.14.6'},
+  {t:NOW-27*m, user:'s.chen@acme.com',    event:'FILE_ACCESS',   resource:'security-audit-2025.pdf',               result:'Allowed',    ip:'91.66.132.40'},
+  {t:NOW-34*m, user:'l.nguyen@acme.com',  event:'FILE_UPLOAD',   resource:'onboarding-final-cut.mp4 · 248 MB · AES-256', result:'Allowed', ip:'77.56.210.8'},
+  {t:NOW-41*m, user:'s.chen@acme.com',    event:'SHARE_REVOKED', resource:'press-release-draft.docx · link z9c4bs6',result:'Allowed',   ip:'91.66.132.40'},
+  {t:NOW-48*m, user:'policy-engine',      event:'POLICY_UPDATE', resource:'ZTA-114 · deny-by-default for Restricted',result:'Allowed',   ip:'—'},
+  {t:NOW-55*m, user:'unknown-principal',  event:'ACCESS_DENIED', resource:'encryption-rotation-runbook.txt',        result:'Denied',     ip:'45.155.205.233'},
+  {t:NOW-70*m, user:'hsm-guardian',       event:'KEY_ROTATION',  resource:'HSM-2 · scheduled 90-day rotation',     result:'Allowed',    ip:'—'},
+  {t:NOW-80*m, user:'d.okafor@acme.com',  event:'FILE_ACCESS',   resource:'api-gateway-architecture.png',          result:'Allowed',    ip:'95.90.44.201'},
+  {t:NOW-86*m, user:'m.alvarez@acme.com', event:'MFA_CHALLENGE', resource:'step-up · Restricted file',             result:'Challenged', ip:'84.17.46.20'},
+  {t:NOW-2*h,  user:'a.kowalski@acme.com',event:'SHARE_CREATED', resource:'brand-assets-v3.zip → external partner',result:'Allowed',    ip:'77.56.211.19'},
+  {t:NOW-150*m,user:'unknown-principal',  event:'ACCESS_DENIED', resource:'vendor-contract-acme.pdf',              result:'Denied',     ip:'193.32.162.157'},
+  {t:NOW-3*h,  user:'alex.chen@acme.com', event:'SESSION_REVOKED',resource:'all tokens · idle timeout policy',     result:'Allowed',    ip:'84.17.46.12'},
+  {t:NOW-4*h,  user:'l.nguyen@acme.com',  event:'FILE_ACCESS',   resource:'Product-Roadmap-2026.pdf',              result:'Allowed',    ip:'77.56.210.8'},
+  {t:NOW-5*h,  user:'mdm-broker',         event:'DEVICE_ENROLLED',resource:'MacBook Pro 16 · managed · verified', result:'Allowed',    ip:'91.66.132.40'},
+  {t:NOW-6*h,  user:'a.kowalski@acme.com',event:'ACCESS_DENIED', resource:'security-audit-2025.pdf · rate limit',  result:'Denied',     ip:'103.75.190.28'},
+  {t:NOW-7*h,  user:'alex.chen@acme.com', event:'FILE_DOWNLOAD', resource:'Employee-Handbook-2025.pdf · watermarked',result:'Allowed',   ip:'84.17.46.12'},
+  {t:NOW-8*h,  user:'dlp-scanner',        event:'DLP_SCAN',      resource:'upload batch #8841 · 0 findings',       result:'Allowed',    ip:'—'},
+  {t:NOW-9*h,  user:'m.alvarez@acme.com', event:'FILE_ACCESS',   resource:'design-system-tokens.fig',              result:'Allowed',    ip:'84.17.46.20'},
+  {t:NOW-11*h, user:'unknown-principal',  event:'ACCESS_DENIED', resource:'Q4-Financial-Forecast.xlsx · geo-fence',result:'Denied',     ip:'102.89.32.117'},
+  {t:NOW-13*h, user:'alex.chen@acme.com', event:'POLICY_UPDATE', resource:'Geo-fence allowlist · +2 regions',      result:'Allowed',    ip:'84.17.46.12'},
+  {t:NOW-1*d,  user:'s.chen@acme.com',    event:'FILE_ACCESS',   resource:'security-audit-2025.pdf',               result:'Challenged', ip:'91.66.132.40'},
+  {t:NOW-26*h, user:'alex.chen@acme.com', event:'SHARE_CREATED', resource:'security-audit-2025.pdf · password',    result:'Allowed',    ip:'84.17.46.12'}
+];
+let notifs = [
+  {id:1, tone:'red',     title:'Access blocked from Tor exit node', sub:'Q4-Financial-Forecast.xlsx · 185.220.14.6 · auto-quarantined', time:'2 min ago', unread:true},
+  {id:2, tone:'amber',   title:'Policy ZTA-114 updated',            sub:'Deny-by-default for Restricted class · applies to 1,284 files', time:'26 min ago', unread:true},
+  {id:3, tone:'emerald', title:'HSM key rotation complete',         sub:'HSM-2 · scheduled 90-day rotation · zero downtime',             time:'2 hours ago', unread:true},
+  {id:4, tone:'cyan',    title:'New managed device enrolled',       sub:'MacBook Pro 16 · assigned to s.chen · MDM posture verified',    time:'5 hours ago', unread:true}
+];
+
+/* ---------- Toast system ---------- */
+const TOAST_ICONS = {
+  success:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
+  danger:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fb7185" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>',
+  info:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>',
+  warn:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>'
+};
+function toast(msg, type, action){
+  type = type || 'success';
+  const el = document.createElement('div');
+  el.className = 'toast' + (type !== 'success' ? ' toast-' + type : '');
+  el.innerHTML = '<span class="toast-ic">' + (TOAST_ICONS[type]||TOAST_ICONS.info) + '</span><span class="toast-msg">' + msg + '</span>' +
+    (action ? '<button class="toast-action">' + action.label + '</button>' : '') +
+    '<button class="toast-x" aria-label="Dismiss"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>';
+  const kill = () => { el.classList.add('out'); setTimeout(() => el.remove(), 320); };
+  el.querySelector('.toast-x').addEventListener('click', kill);
+  if (action) el.querySelector('.toast-action').addEventListener('click', () => { action.fn(); kill(); });
+  $('#toasts').appendChild(el);
+  setTimeout(kill, action ? 6500 : 4600);
+}
+
+/* ---------- Audit helper ---------- */
+function logAudit(event, resource, result, ip, user){
+  audit.unshift({t: Date.now(), user: user || 'alex.chen@acme.com', event, resource, result, ip: ip || '84.17.46.12'});
+  renderAudit();
+}
+
+/* ---------- Navigation ---------- */
+function goto(page){
+  $$('.page').forEach(p => p.classList.remove('active'));
+  const target = document.getElementById('page-' + page);
+  if (target) target.classList.add('active');
+  $$('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page === page));
+  document.body.classList.remove('sidebar-open');
+  window.scrollTo({top: 0, behavior: 'smooth'});
+  if (page === 'security') initBlocksChart();
+  if (page === 'dashboard' && window.__charts) window.__charts.forEach(c => c.resize());
+  if (page === 'security' && window.__blocksChart) setTimeout(() => window.__blocksChart.resize(), 60);
+}
+$$('.nav-item').forEach(btn => btn.addEventListener('click', () => goto(btn.dataset.page)));
+$('#viewAllFiles').addEventListener('click', () => goto('files'));
+$('#hamburger').addEventListener('click', () => document.body.classList.toggle('sidebar-open'));
+$('#sideOverlay').addEventListener('click', () => document.body.classList.remove('sidebar-open'));
+
+/* ---------- Clock & session countdown ---------- */
+let sessionLeft = 15 * 60;
+function tick(){
+  $('#utcClock').textContent = new Date().toLocaleTimeString('en-GB',{hour12:false, timeZone:'UTC'});
+  sessionLeft--;
+  if (sessionLeft <= 0){
+    sessionLeft = 15 * 60;
+    toast('Zero-trust session re-validated — identity, device &amp; policy all re-verified', 'info');
+    logAudit('SESSION_REVALIDATE', 'token rotated · 15-min cycle', 'Allowed');
+  }
+  const mm = String(Math.floor(sessionLeft/60)).padStart(2,'0');
+  const ss = String(sessionLeft % 60).padStart(2,'0');
+  $('#sessionTimer').textContent = mm + ':' + ss;
+  $('#sessionPill').classList.toggle('warn', sessionLeft <= 60);
+}
+setInterval(tick, 1000); tick();
+
+/* ---------- Greeting & date ---------- */
+(function(){
+  const hr = new Date().getHours();
+  $('#greetingName').textContent = hr < 12 ? 'Good morning' : hr < 18 ? 'Good afternoon' : 'Good evening';
+  $('#todayLine').textContent = '· ' + new Date().toLocaleDateString('en-GB',{weekday:'long', day:'numeric', month:'long', year:'numeric'});
+})();
+
+/* ---------- Animated counters ---------- */
+$$('[data-count]').forEach(el => {
+  const target = +el.dataset.count, dur = 1400, t0 = performance.now();
+  function frame(t){
+    const p = Math.min((t - t0) / dur, 1), e = 1 - Math.pow(2, -9 * p);
+    el.textContent = Math.round(target * (p === 1 ? 1 : e)).toLocaleString('en-US');
+    if (p < 1) requestAnimationFrame(frame); else el.textContent = target.toLocaleString('en-US');
+  }
+  requestAnimationFrame(frame);
+});
+setTimeout(() => { $('#storageFill').style.width = '42.3%'; }, 250);
+
+/* ---------- FILES: state, render, actions ---------- */
+let fileFilter = 'all', fileSearch = '', fileSort = 'modified', viewMode = 'grid', lastDeleted = null;
+
+function filteredFiles(){
+  let arr = files.filter(f => {
+    const okFilter = fileFilter === 'all' ? true : fileFilter === 'starred' ? f.star : f.cls === fileFilter;
+    const okSearch = !fileSearch || f.name.toLowerCase().includes(fileSearch);
+    return okFilter && okSearch;
+  });
+  const sorters = {
+    modified: (a,b) => b.mod - a.mod,
+    name:     (a,b) => a.name.localeCompare(b.name),
+    size:     (a,b) => b.size - a.size,
+    risk:     (a,b) => b.risk - a.risk
+  };
+  return arr.sort(sorters[fileSort] || sorters.modified);
+}
+function starSVG(){ return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>'; }
+function shareSVG(){ return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>'; }
+function dlSVG(){ return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>'; }
+function trashSVG(){ return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>'; }
+function actionBtns(f){
+  return '<button class="mini-btn" data-action="share" data-id="' + f.id + '" title="Share securely">' + shareSVG() + '</button>' +
+         '<button class="mini-btn" data-action="download" data-id="' + f.id + '" title="Download via zero-trust gateway">' + dlSVG() + '</button>' +
+         '<button class="mini-btn danger" data-action="delete" data-id="' + f.id + '" title="Delete">' + trashSVG() + '</button>';
+}
+function renderFiles(){
+  const items = filteredFiles();
+  const total = files.reduce((a,f) => a + f.size, 0);
+  $('#filesMeta').textContent = items.length + ' of ' + files.length + ' items · ' + fmtSize(total) + ' · all scanned & encrypted';
+  $('#filesBadge').textContent = files.length;
+  $('#filesEmpty').hidden = items.length !== 0;
+
+  $('#fileGrid').innerHTML = items.map(f =>
+    '<div class="file-card">' +
+      '<div class="fc-top"><div class="fic ' + ficClass(f.ext) + '">' + f.ext.toUpperCase() + '</div>' +
+        '<button class="icon-btn star-btn' + (f.star ? ' starred' : '') + '" data-action="star" data-id="' + f.id + '" title="' + (f.star ? 'Unstar' : 'Star') + '" style="width:30px;height:30px">' + starSVG() + '</button></div>' +
+      '<div class="fc-name" title="' + f.name + '">' + f.name + '</div>' +
+      '<div class="fc-meta">' + fmtSize(f.size) + ' · ' + timeAgo(f.mod) + ' · ' + f.owner + '</div>' +
+      '<div class="fc-foot"><span class="cls cls-' + f.cls + '">' + f.cls.toUpperCase() + '</span>' +
+        '<span class="risk risk-' + riskClass(f.risk) + '"><i></i>' + riskLabel(f.risk).toUpperCase() + ' ' + f.risk + '</span>' +
+        '<span class="fc-actions">' + actionBtns(f) + '</span></div>' +
+    '</div>').join('');
+
+  $('#fileListBody').innerHTML = items.map(f =>
+    '<tr><td><div class="row-name"><div class="fic ' + ficClass(f.ext) + '" style="width:34px;height:34px;border-radius:9px;font-size:8px">' + f.ext.toUpperCase() + '</div><span>' + f.name + '</span></div></td>' +
+    '<td><span class="cls cls-' + f.cls + '">' + f.cls.toUpperCase() + '</span></td>' +
+    '<td><div style="display:flex;align-items:center;gap:9px"><div class="rbar"><div class="rbar-' + riskClass(f.risk) + '" style="width:' + f.risk + '%"></div></div><span class="mono" style="font-size:10.5px;color:var(--muted)">' + f.risk + '</span></div></td>' +
+    '<td class="mono" style="font-size:11px;color:#a9bcd6">' + fmtSize(f.size) + '</td>' +
+    '<td style="color:var(--muted);font-size:11px">' + timeAgo(f.mod) + '</td>' +
+    '<td><div class="fc-actions" style="justify-content:flex-end">' + actionBtns(f) + '</div></td></tr>').join('');
+
+  $('#fileGrid').hidden = viewMode !== 'grid';
+  $('#fileListWrap').hidden = viewMode !== 'list';
+}
+function renderRecent(){
+  const recent = [...files].sort((a,b) => b.mod - a.mod).slice(0,5);
+  $('#recentFilesBody').innerHTML = recent.map(f =>
+    '<tr><td><div class="tname"><div class="fic ' + ficClass(f.ext) + '" style="width:32px;height:32px;border-radius:9px;font-size:7.5px">' + f.ext.toUpperCase() + '</div><span title="' + f.name + '">' + f.name + '</span></div></td>' +
+    '<td><span class="cls cls-' + f.cls + '">' + f.cls.toUpperCase() + '</span></td>' +
+    '<td><span class="risk risk-' + riskClass(f.risk) + '"><i></i>' + f.risk + '</span></td>' +
+    '<td class="mono" style="font-size:10.5px;color:var(--muted)">' + fmtSize(f.size) + '</td></tr>').join('');
+}
+function deleteFile(id){
+  const idx = files.findIndex(f => f.id === id);
+  if (idx < 0) return;
+  lastDeleted = { file: files[idx], index: idx };
+  files.splice(idx, 1);
+  renderFiles(); renderRecent();
+  logAudit('FILE_DELETED', lastDeleted.file.name, 'Allowed');
+  toast('<b>' + lastDeleted.file.name + '</b> moved to quarantine bin', 'warn', { label: 'UNDO', fn: () => {
+    files.splice(Math.min(lastDeleted.index, files.length), 0, lastDeleted.file);
+    renderFiles(); renderRecent(); toast('File restored from quarantine bin');
+  }});
+}
+document.addEventListener('click', e => {
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  const id = +btn.dataset.id, action = btn.dataset.action;
+  const f = files.find(x => x.id === id);
+  if (action === 'star' && f){ f.star = !f.star; renderFiles(); toast(f.star ? 'Added to starred' : 'Removed from starred', 'info'); }
+  else if (action === 'share' && f){ openShare(f.id); }
+  else if (action === 'download' && f){ openZeroTrust(f, 'grant'); }
+  else if (action === 'delete'){ deleteFile(id); }
+});
+$('#chipRow').addEventListener('click', e => {
+  const chip = e.target.closest('.chip'); if (!chip) return;
+  fileFilter = chip.dataset.filter;
+  $$('#chipRow .chip').forEach(c => c.classList.toggle('active', c === chip));
+  renderFiles();
+});
+$('#sortSelect').addEventListener('change', e => { fileSort = e.target.value; renderFiles(); });
+$('#gridViewBtn').addEventListener('click', () => { viewMode = 'grid'; $('#gridViewBtn').classList.add('active'); $('#listViewBtn').classList.remove('active'); renderFiles(); });
+$('#listViewBtn').addEventListener('click', () => { viewMode = 'list'; $('#listViewBtn').classList.add('active'); $('#gridViewBtn').classList.remove('active'); renderFiles(); });
+
+/* Global search → files page */
+const searchInput = $('#globalSearch');
+searchInput.addEventListener('input', () => {
+  fileSearch = searchInput.value.trim().toLowerCase();
+  if (!document.getElementById('page-files').classList.contains('active')) goto('files');
+  renderFiles();
+});
+searchInput.addEventListener('keydown', e => { if (e.key === 'Escape'){ searchInput.value=''; fileSearch=''; renderFiles(); searchInput.blur(); } });
+document.addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k'){ e.preventDefault(); searchInput.focus(); }
+  if (e.key === 'Escape'){
+    $$('.modal-backdrop.open').forEach(m => m.classList.remove('open'));
+    $('#notifPanel').classList.remove('open');
+    document.body.classList.remove('sidebar-open');
+    ztAborted = true;
+  }
+});
+
+/* ---------- LINKS ---------- */
+function renderLinks(){
+  $('#linksBadge').textContent = links.length;
+  $('#linksEmpty').hidden = links.length !== 0;
+  $('#linksBody').innerHTML = links.map(l =>
+    '<tr data-link="' + l.id + '"><td><div class="row-name"><div class="fic ' + ficClass(l.ext) + '" style="width:32px;height:32px;border-radius:9px;font-size:7.5px">' + l.ext.toUpperCase() + '</div><span>' + l.file + '</span></div></td>' +
+    '<td><span class="link-mono">share.secureshare.cloud/v/' + l.id + '</span></td>' +
+    '<td><span class="perm-badge perm-' + l.perm + '">' + l.perm.toUpperCase() + '</span>' + (l.pw ? ' <span class="mono" style="font-size:9px;color:#fde68a">+PW</span>' : '') + '</td>' +
+    '<td style="color:var(--muted);font-size:11px">' + l.exp + '</td>' +
+    '<td class="mono" style="font-size:11px">' + l.views.toLocaleString() + '</td>' +
+    '<td class="mono" style="font-size:11px">' + l.dls.toLocaleString() + '</td>' +
+    '<td><div class="fc-actions" style="justify-content:flex-end">' +
+      '<button class="mini-btn" data-link-action="copy" data-id="' + l.id + '" title="Copy link"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>' +
+      '<button class="mini-btn danger" data-link-action="revoke" data-id="' + l.id + '" title="Revoke instantly"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>' +
+    '</div></td></tr>').join('');
+}
+document.addEventListener('click', e => {
+  const btn = e.target.closest('[data-link-action]'); if (!btn) return;
+  const l = links.find(x => x.id === btn.dataset.id); if (!l) return;
+  const url = 'https://share.secureshare.cloud/v/' + l.id;
+  if (btn.dataset.linkAction === 'copy'){
+    copyText(url).then(() => toast('Secure link copied to clipboard'));
+  } else if (btn.dataset.linkAction === 'revoke'){
+    const row = btn.closest('tr'); row.classList.add('revoked-row');
+    logAudit('SHARE_REVOKED', l.file, 'Allowed');
+    setTimeout(() => { links = links.filter(x => x.id !== l.id); renderLinks(); }, 650);
+    toast('Link revoked — access cut off instantly across all sessions', 'danger');
+  }
+});
+function copyText(t){
+  if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(t).catch(() => fallbackCopy(t));
+  return Promise.resolve(fallbackCopy(t));
+}
+function fallbackCopy(t){
+  const ta = document.createElement('textarea'); ta.value = t; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch(e){} ta.remove();
+}
+$('#newLinkBtn').addEventListener('click', () => openShare(null));
+
+/* ---------- SHARE MODAL ---------- */
+let shareExpiryH = 24;
+const expiryLabel = () => shareExpiryH === 1 ? '1 hour' : shareExpiryH === 24 ? '24 hours' : shareExpiryH === 168 ? '7 days' : '30 days';
+function openShare(fileId){
+  const sel = $('#shareFileSelect');
+  sel.innerHTML = files.map(f => '<option value="' + f.id + '">' + f.name + '</option>').join('');
+  if (fileId) sel.value = fileId;
+  $('#linkResult').hidden = true;
+  $('#generateLinkBtn').innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 3.5v6c0 5-3.4 9.6-8 11.5C7.4 21.1 4 16.5 4 11.5v-6L12 2z"/></svg>Generate Secure Link';
+  $('#shareModal').classList.add('open');
+}
+function closeShare(){ $('#shareModal').classList.remove('open'); }
+$('#shareCloseBtn').addEventListener('click', closeShare);
+$('#shareModalCancel').addEventListener('click', closeShare);
+$('#shareModal').addEventListener('click', e => { if (e.target.id === 'shareModal') closeShare(); });
+$('#permGrid').addEventListener('click', e => {
+  const card = e.target.closest('.perm-card'); if (!card) return;
+  $$('#permGrid .perm-card').forEach(c => c.classList.toggle('selected', c === card));
+  card.querySelector('input').checked = true;
+});
+$('#expirySeg').addEventListener('click', e => {
+  const b = e.target.closest('.expiry-opt'); if (!b) return;
+  shareExpiryH = +b.dataset.h;
+  $$('#expirySeg .expiry-opt').forEach(x => x.classList.toggle('active', x === b));
+});
+$('#pwToggle').addEventListener('change', e => { $('#pwField').hidden = !e.target.checked; if (e.target.checked) $('#pwValue').focus(); });
+$('#generateLinkBtn').addEventListener('click', () => {
+  const f = files.find(x => x.id === +$('#shareFileSelect').value); if (!f) return;
+  const perm = ($('#permGrid input:checked') || {}).value || 'Viewer';
+  const id = randId(7);
+  const link = { id, file: f.name, ext: f.ext, perm, exp: 'in ' + expiryLabel(), views: 0, dls: 0, pw: $('#pwToggle').checked, wm: $('#wmToggle').checked };
+  links.unshift(link); renderLinks();
+  const url = 'https://share.secureshare.cloud/v/' + id;
+  $('#generatedLink').value = url;
+  $('#shareResultMeta').textContent = 'Expires in ' + expiryLabel() + ' · ' + perm + ' · AES-256' + (link.pw ? ' · password-gated' : '') + (link.wm ? ' · watermarked' : '') + ' · every open re-verified & logged';
+  $('#linkResult').hidden = false;
+  f.shares = (f.shares || 0) + 1;
+  logAudit('SHARE_CREATED', f.name + ' · ' + perm, 'Allowed');
+  toast('Secure link created — <b>' + expiryLabel() + '</b> expiry, ' + perm + ' rights');
+});
+$('#copyLinkBtn').addEventListener('click', () => {
+  copyText($('#generatedLink').value).then(() => toast('Secure link copied to clipboard'));
+});
+
+/* ---------- UPLOAD MODAL ---------- */
+let uploadItems = [], uploadTimers = [];
+function openUpload(){ $('#uploadModal').classList.add('open'); }
+function closeUpload(){
+  uploadTimers.forEach(t => clearInterval(t)); uploadTimers = [];
+  uploadItems = uploadItems.filter(i => i.done);
+  $('#uploadList').innerHTML = '';
+  $('#uploadCount').textContent = '0 files queued';
+  $('#confirmUpload').disabled = true;
+  $('#uploadModal').classList.remove('open');
+  renderFiles(); renderRecent();
+}
+$('#uploadBtnTop').addEventListener('click', openUpload);
+$('#uploadBtnFiles').addEventListener('click', openUpload);
+$('#uploadCloseBtn').addEventListener('click', closeUpload);
+$('#cancelUpload').addEventListener('click', closeUpload);
+$('#uploadModal').addEventListener('click', e => { if (e.target.id === 'uploadModal') closeUpload(); });
+$('#dropZone').addEventListener('click', () => $('#fileInput').click());
+$('#dropZone').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); $('#fileInput').click(); } });
+['dragenter','dragover'].forEach(ev => $('#dropZone').addEventListener(ev, e => { e.preventDefault(); $('#dropZone').classList.add('dragover'); }));
+['dragleave','drop'].forEach(ev => $('#dropZone').addEventListener(ev, e => { e.preventDefault(); $('#dropZone').classList.remove('dragover'); }));
+$('#dropZone').addEventListener('drop', e => { if (e.dataTransfer && e.dataTransfer.files.length) queueFiles([...e.dataTransfer.files]); });
+$('#fileInput').addEventListener('change', e => { if (e.target.files.length) queueFiles([...e.target.files]); e.target.value = ''; });
+
+function queueFiles(list){
+  list.slice(0, 8).forEach((f, i) => {
+    const ext = (f.name.includes('.') ? f.name.split('.').pop() : 'bin').toLowerCase().slice(0,4);
+    const item = { id: Date.now() + i, name: f.name, ext, size: f.size || Math.round(Math.random()*20*MB) + MB, progress: 0, done: false };
+    uploadItems.push(item);
+    const row = document.createElement('div');
+    row.className = 'upload-item'; row.id = 'upl-' + item.id;
+    row.innerHTML = '<div class="fic ' + ficClass(ext) + '" style="width:38px;height:38px;border-radius:10px;font-size:8px">' + ext.toUpperCase() + '</div>' +
+      '<div class="upload-item-body"><div class="upload-item-name" title="' + item.name + '">' + item.name + '</div>' +
+      '<div class="upload-item-sub">' + fmtSize(item.size) + ' · chunked · AES-256-GCM</div>' +
+      '<div class="upload-bar"><div class="upload-bar-fill"></div></div></div>' +
+      '<div class="upload-status"><div class="spin" style="border-color:rgba(34,211,238,.2);border-top-color:#22d3ee"></div>UPLOADING</div>';
+    $('#uploadList').appendChild(row);
+    const timer = setInterval(() => {
+      item.progress = Math.min(100, item.progress + 6 + Math.random() * 17);
+      const rowEl = document.getElementById('upl-' + item.id); if (!rowEl){ clearInterval(timer); return; }
+      rowEl.querySelector('.upload-bar-fill').style.width = item.progress + '%';
+      if (item.progress >= 100 && !item.done){
+        clearInterval(timer);
+        const st = rowEl.querySelector('.upload-status');
+        st.innerHTML = '<div class="spin" style="border-color:rgba(251,191,36,.25);border-top-color:#fbbf24"></div>SCANNING';
+        setTimeout(() => {
+          item.done = true;
+          st.classList.add('done');
+          st.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>SECURED';
+          files.unshift({ id: Date.now() + Math.floor(Math.random()*9999), name: item.name, ext: item.ext, size: item.size, mod: Date.now(), owner: 'You', cls: 'Internal', risk: 3 + Math.floor(Math.random()*14), dl: 0, shares: 0, star: false });
+          $('#uploadCount').textContent = uploadItems.filter(x => x.done).length + ' of ' + uploadItems.length + ' secured';
+          $('#confirmUpload').disabled = uploadItems.some(x => !x.done);
+          if (uploadItems.every(x => x.done)) $('#uploadCount').textContent = 'All files encrypted, scanned & vaulted';
+        }, 650);
+      }
+    }, 110);
+    uploadTimers.push(timer);
+  });
+  $('#uploadCount').textContent = uploadItems.filter(x => x.done).length + ' of ' + uploadItems.length + ' secured';
+  $('#confirmUpload').disabled = true;
+}
+$('#confirmUpload').addEventListener('click', () => {
+  const n = uploadItems.filter(x => x.done).length;
+  closeUpload();
+  logAudit('FILE_UPLOAD', n + ' file(s) · AES-256-GCM · DLP clean', 'Allowed');
+  toast('<b>' + n + '</b> file(s) uploaded, encrypted and added to My Files');
+});
+
+/* ---------- ZERO-TRUST GATEWAY ---------- */
+let ztAborted = true, ztCurrentFile = null, ztMode = 'grant';
+const ZT_ICONS = {
+  user:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M16 11l2 2 4-4"/></svg>',
+  device:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M2 20h20"/></svg>',
+  globe:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
+  activity:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>',
+  shield:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>'
+};
+function ztStepsFor(mode){
+  if (mode === 'threat') return [
+    { icon:'user',     title:'Authenticating identity',       detail:'PASS · SSO session okta-7f3a…4821 · MFA satisfied', fail:false, ms:750 },
+    { icon:'device',   title:'Checking device posture',       detail:'FAIL · Unrecognized device 45.155.9.71 · no EDR · jailbreak indicators', fail:true, ms:900 },
+    { icon:'globe',    title:'Analyzing network & location',  detail:'FAIL · Impossible travel: Lagos, NG — 13 min after Berlin session', fail:true, ms:850 },
+    { icon:'activity', title:'Scoring behavioral baseline',   detail:'FAIL · Velocity 40× baseline · beaconing signature matched', fail:true, ms:800 },
+    { icon:'shield',   title:'Evaluating access policy',      detail:'DENY · Rule ZTA-114 violated · auto-quarantine triggered', fail:true, ms:700 }
+  ];
+  return [
+    { icon:'user',     title:'Authenticating identity',       detail:'PASS · phishing-resistant MFA (FIDO2) · okta-7f3a…4821', fail:false, ms:700 },
+    { icon:'device',   title:'Checking device posture',       detail:'PASS · MacBook Pro 16 · macOS 15.2 · EDR healthy · FileVault on', fail:false, ms:850 },
+    { icon:'globe',    title:'Analyzing network & location',  detail:'PASS · Berlin, DE · corporate VPN AS59253 · geo-fence allowed', fail:false, ms:750 },
+    { icon:'activity', title:'Scoring behavioral baseline',   detail:'PASS · 98.2% consistent with your 90-day profile', fail:false, ms:800 },
+    { icon:'shield',   title:'Evaluating access policy',      detail:'PASS · Rule ZTA-114 · classification clearance verified', fail:false, ms:650 }
+  ];
+}
+function openZeroTrust(file, mode){
+  ztCurrentFile = file; ztMode = mode || 'grant'; ztAborted = false;
+  $('#ztFileName').textContent = file.name;
+  const steps = ztStepsFor(ztMode);
+  $('#ztSteps').innerHTML = steps.map((s, i) =>
+    '<li class="zstep" id="zstep-' + i + '"><div class="zs-ic">' + ZT_ICONS[s.icon] + '</div>' +
+    '<div class="zs-body"><div class="zs-title">' + s.title + '</div><div class="zs-detail">' + s.detail + '</div></div>' +
+    '<div class="zs-status"><div class="zs-num">' + (i + 1) + '</div></div></li>').join('');
+  const verdict = $('#ztVerdict'); verdict.className = 'zt-verdict'; verdict.classList.remove('show','granted','denied');
+  $('#ztStepup').hidden = true;
+  $('#ztRiskFill').style.width = '0%';
+  $('#ztRiskValue').textContent = '0';
+  const note = $('#ztFooterNote'); note.textContent = 'Establishing encrypted channel to HSM-2…'; note.className = 'zt-foot-note';
+  const fb = $('#ztFooterBtn'); fb.disabled = true; fb.textContent = 'Verifying…'; fb.className = 'btn';
+  $('#ztModal').classList.add('open');
+  runStep(0, steps);
+}
+function runStep(i, steps){
+  if (ztAborted) return;
+  if (i >= steps.length){ finalizeZeroTrust(); return; }
+  const el = document.getElementById('zstep-' + i); if (!el) return;
+  el.classList.add('active');
+  el.querySelector('.zs-status').innerHTML = '<div class="spin"></div>';
+  const note = $('#ztFooterNote');
+  note.textContent = 'Layer ' + (i + 1) + ' of ' + steps.length + ' — ' + steps[i].title.toLowerCase() + '…';
+  setTimeout(() => {
+    if (ztAborted) return;
+    el.classList.remove('active');
+    el.classList.add(steps[i].fail ? 'fail' : 'done');
+    el.querySelector('.zs-status').innerHTML = steps[i].fail
+      ? '<svg class="pop" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fb7185" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>'
+      : '<svg class="pop" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
+    animateRisk(Math.round(((i + 1) / steps.length) * (ztCurrentFile.risk || 40)));
+    runStep(i + 1, steps);
+  }, steps[i].ms);
+}
+function animateRisk(target){
+  const fill = $('#ztRiskFill'), num = $('#ztRiskValue');
+  fill.style.width = target + '%';
+  const from = +num.textContent || 0, t0 = performance.now(), dur = 700;
+  function frame(t){
+    const p = Math.min((t - t0) / dur, 1), e = 1 - Math.pow(2, -8 * p);
+    num.textContent = Math.round(from + (target - from) * (p === 1 ? 1 : e));
+    if (p < 1) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+function finalizeZeroTrust(){
+  const f = ztCurrentFile, note = $('#ztFooterNote'), fb = $('#ztFooterBtn');
+  animateRisk(f.risk);
+  if (ztMode === 'threat'){
+    const v = $('#ztVerdict'); v.classList.add('show','denied');
+    $('#ztVerdictIcon').innerHTML = '<svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+    $('#ztVerdictTitle').textContent = 'ACCESS DENIED';
+    $('#ztVerdictSub').textContent = 'Policy ZTA-114 violated — attack neutralized. Incident INC-2084 filed with the SOC. IP 45.155.9.71 quarantined at the edge.';
+    note.textContent = 'Session terminated · 0 bytes released · keys never unwrapped'; note.className = 'zt-foot-note denying';
+    fb.disabled = false; fb.textContent = 'Acknowledge & Quarantine'; fb.className = 'btn btn-danger-ghost';
+    fb.onclick = () => {
+      $('#ztModal').classList.remove('open');
+      blocked.unshift({ id: Date.now(), ip:'45.155.9.71', geo:'Lagos, NG · simulated', reason:'Simulation · impossible travel · non-compliant device', target:'customer-data-export.csv', time:Date.now(), q:false });
+      renderBlocked();
+      const tc = $('#threatsCount'); tc.textContent = (+tc.textContent.replace(/,/g,'') || 17) + 1;
+      logAudit('ACCESS_DENIED', 'customer-data-export.csv · simulation', 'Denied', '45.155.9.71', 'unknown-principal');
+      toast('Threat neutralized — access denied, IP quarantined, incident filed', 'danger');
+    };
+    return;
+  }
+  if (f.risk >= 55){
+    note.textContent = 'Step-up required — Restricted classification'; 
+    $('#ztStepup').hidden = false;
+    const code = $('#ztCodeInput'); code.value = ''; setTimeout(() => code.focus(), 80);
+    fb.disabled = true; fb.textContent = 'Awaiting step-up…'; fb.className = 'btn'; fb.onclick = null;
+  } else {
+    grantAccess();
+  }
+}
+function grantAccess(){
+  const f = ztCurrentFile, note = $('#ztFooterNote'), fb = $('#ztFooterBtn');
+  $('#ztStepup').hidden = true;
+  const v = $('#ztVerdict'); v.classList.add('show','granted');
+  $('#ztVerdictIcon').innerHTML = '<svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
+  $('#ztVerdictTitle').textContent = 'ACCESS GRANTED';
+  $('#ztVerdictSub').textContent = 'Decryption key released by HSM-2 · AES-256-GCM · session bound & watermarked · logged to immutable audit trail.';
+  note.textContent = 'Decrypting payload…'; note.className = 'zt-foot-note granting';
+  fb.disabled = true; fb.textContent = 'Decrypting…'; fb.className = 'btn btn-primary'; fb.onclick = null;
+  setTimeout(() => {
+    downloadDecrypted(f);
+    note.textContent = 'Done — access recorded in audit log · ref AUD-' + randId(6).toUpperCase();
+    fb.disabled = false; fb.textContent = 'Done'; fb.className = 'btn btn-primary';
+    fb.onclick = () => $('#ztModal').classList.remove('open');
+    logAudit('FILE_DOWNLOAD', f.name + ' · gateway grant · risk ' + f.risk, 'Allowed');
+    toast('<b>' + f.name + '</b> decrypted via zero-trust gateway');
+  }, 850);
+}
+function downloadDecrypted(f){
+  const cert = 'SECURESHARE CLOUD — ZERO-TRUST DECRYPTION CERTIFICATE\n' +
+    '=========================================================\n' +
+    'File............: ' + f.name + '\n' +
+    'Classification..: ' + (f.cls || 'Internal') + '\n' +
+    'Size............: ' + fmtSize(f.size || 0) + '\n' +
+    'Risk score......: ' + f.risk + '/100 (' + riskLabel(f.risk).toUpperCase() + ')\n' +
+    'Cipher..........: AES-256-GCM · envelope keys sealed in HSM-2\n' +
+    'Key release.....: policy ZTA-114 · 5/5 layers passed\n' +
+    'Session.........: bound to device MBP-16-ALEX (84.17.46.12) · watermarked\n' +
+    'Verified at.....: ' + new Date().toISOString() + '\n' +
+    'Audit reference.: AUD-' + randId(8).toUpperCase() + '\n\n' +
+    'This payload left the vault through the zero-trust gateway.\n' +
+    'Every layer verdict above is recorded in the immutable audit trail.\n';
+  const blob = new Blob([cert], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = f.name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+$('#ztCloseBtn').addEventListener('click', () => { ztAborted = true; $('#ztModal').classList.remove('open'); });
+$('#ztModal').addEventListener('click', e => { if (e.target.id === 'ztModal'){ ztAborted = true; $('#ztModal').classList.remove('open'); } });
+$('#ztVerifyBtn').addEventListener('click', verifyStepup);
+$('#ztCodeInput').addEventListener('keydown', e => { if (e.key === 'Enter') verifyStepup(); });
+$('#ztCodeInput').addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g,'').slice(0,6); });
+function verifyStepup(){
+  const code = $('#ztCodeInput');
+  if (code.value.length !== 6){ code.classList.remove('shake'); void code.offsetWidth; code.classList.add('shake'); toast('Enter the full 6-digit code', 'warn'); return; }
+  logAudit('MFA_CHALLENGE', 'step-up passed · Restricted · ' + ztCurrentFile.name, 'Allowed');
+  grantAccess();
+}
+$('#runSimBtn').addEventListener('click', () => {
+  openZeroTrust({ id: 999, name: 'customer-data-export.csv', ext: 'csv', size: 6.8*MB, cls: 'Restricted', risk: 96, mod: Date.now(), owner: 'You' }, 'threat');
+});
+
+/* ---------- BLOCKED LIST ---------- */
+function renderBlocked(){
+  $('#threatBadge').textContent = blocked.filter(b => !b.q).length;
+  $('#blockedCount').textContent = blocked.filter(b => !b.q).length + ' OPEN';
+  $('#blockedList').innerHTML = blocked.map(b =>
+    '<div class="blocked-item" data-bid="' + b.id + '">' +
+      '<div class="blocked-top"><span class="blocked-reason">' + b.reason + '</span><span class="blocked-time">' + timeAgo(b.time) + '</span></div>' +
+      '<div class="blocked-target" title="' + b.target + '">target · ' + b.target + '</div>' +
+      '<div class="blocked-meta"><span class="blocked-ip">' + b.ip + '</span><span class="blocked-geo">' + b.geo + '</span>' +
+      '<button class="quarantine-btn' + (b.q ? ' done' : '') + '" data-quarantine="' + b.id + '"' + (b.q ? ' disabled' : '') + '>' + (b.q ? 'QUARANTINED' : 'QUARANTINE IP') + '</button></div>' +
+    '</div>').join('');
+}
+$('#blockedList').addEventListener('click', e => {
+  const btn = e.target.closest('[data-quarantine]'); if (!btn) return;
+  const b = blocked.find(x => x.id === +btn.dataset.quarantine); if (!b || b.q) return;
+  b.q = true; renderBlocked();
+  logAudit('IP_QUARANTINE', b.ip + ' · edge block 30d', 'Denied', b.ip, 'policy-engine');
+  toast('IP <b>' + b.ip + '</b> quarantined at the edge for 30 days', 'danger');
+});
+
+/* ---------- AUDIT LOG ---------- */
+let auditFilter = 'all', auditQuery = '';
+const AVATAR_TONES = ['ud-0','ud-1','ud-2','ud-3'];
+function renderAudit(){
+  const q = auditQuery.toLowerCase();
+  const filtered = audit.filter(a => {
+    const okF = auditFilter === 'all' || a.result === auditFilter;
+    const okQ = !q || [a.user, a.event, a.resource, a.result, a.ip].join(' ').toLowerCase().includes(q);
+    return okF && okQ;
+  });
+  $('#cntAll').textContent = audit.length;
+  $('#cntAllowed').textContent = audit.filter(a => a.result === 'Allowed').length;
+  $('#cntChallenged').textContent = audit.filter(a => a.result === 'Challenged').length;
+  $('#cntDenied').textContent = audit.filter(a => a.result === 'Denied').length;
+  $('#auditBody').innerHTML = filtered.map(a => {
+    const initial = (a.user.split('@')[0][0] || 's').toUpperCase();
+    const tone = AVATAR_TONES[[...a.user].reduce((s,c) => s + c.charCodeAt(0), 0) % 4];
+    return '<tr><td class="mono" style="font-size:10.5px;color:#9fb2cc;white-space:nowrap">' + fmtStamp(a.t) + '</td>' +
+      '<td><div class="u-cell"><span class="u-dot ' + tone + '">' + initial + '</span><span>' + a.user + '</span></div></td>' +
+      '<td><span class="event-chip">' + a.event + '</span></td>' +
+      '<td style="color:#c3cfe3;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + a.resource + '">' + a.resource + '</td>' +
+      '<td><span class="res res-' + a.result + '">' + a.result.toUpperCase() + '</span></td>' +
+      '<td class="mono" style="font-size:10.5px;color:var(--muted)">' + a.ip + '</td></tr>';
+  }).join('') || '<tr><td colspan="6" style="text-align:center;padding:34px;color:var(--faint)">No entries match this filter.</td></tr>';
+}
+$$('.audit-filter').forEach(b => b.addEventListener('click', () => {
+  auditFilter = b.dataset.f;
+  $$('.audit-filter').forEach(x => x.classList.toggle('active', x === b));
+  renderAudit();
+}));
+$('#auditSearch').addEventListener('input', e => { auditQuery = e.target.value.trim(); renderAudit(); });
+$('#exportCsvBtn').addEventListener('click', () => {
+  const rows = [['timestamp','principal','event','resource','result','source_ip']];
+  audit.forEach(a => rows.push([new Date(a.t).toISOString(), a.user, a.event, '"' + a.resource.replace(/"/g,'""') + '"', a.result, a.ip]));
+  const csv = rows.map(r => r.join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = 'secureshare-audit-' + new Date().toISOString().slice(0,10) + '.csv';
+  document.body.appendChild(a); a.click(); a.remove();
+  toast('Audit log exported — <b>' + audit.length + '</b> signed entries (CSV)');
+});
+
+/* ---------- LIVE EVENT FEED ---------- */
+const feedUsers = ['alex.chen','s.chen','l.nguyen','m.alvarez','d.okafor','a.kowalski'];
+const feedFiles = ['Q4-Financial-Forecast.xlsx','Product-Roadmap-2026.pdf','security-audit-2025.pdf','brand-assets-v3.zip','design-system-tokens.fig'];
+const feedDevices = ['MacBook Pro 16','ThinkPad X1','iPhone 16 Pro','iPad Air'];
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+const feedPool = [
+  () => ({tone:'emerald', html:'Access granted · <b>' + pick(feedFiles) + '</b> · ' + pick(feedUsers)}),
+  () => ({tone:'cyan',    html:'MFA step-up passed · <b>' + pick(feedUsers) + '</b> · authenticator'}),
+  () => ({tone:'cyan',    html:'DLP scan clean · <b>' + pick(feedFiles) + '</b> · 0 findings'}),
+  () => ({tone:'emerald', html:'Geo-fence OK · <b>Berlin, DE</b> · corporate VPN'}),
+  () => ({tone:'red',     html:'Access denied · <b>' + pick(feedFiles) + '</b> · policy ZTA-114'}),
+  () => ({tone:'amber',   html:'Behavioral shift · <b>' + pick(feedUsers) + '</b> · risk 61 · step-up required'}),
+  () => ({tone:'emerald', html:'Session re-validated · <b>' + pick(feedUsers) + '</b> · token rotated'}),
+  () => ({tone:'cyan',    html:'Device posture OK · <b>' + pick(feedDevices) + '</b> · EDR healthy'})
+];
+let feedPaused = false;
+function addFeedItem(item){
+  const list = $('#feedList');
+  const el = document.createElement('div');
+  el.className = 'feed-item';
+  el.innerHTML = '<span class="feed-dot fd-' + item.tone + '"></span><div class="feed-txt">' + item.html + '</div><span class="feed-time">' + fmtClock(Date.now()) + '</span>';
+  list.prepend(el);
+  while (list.children.length > 8) list.removeChild(list.lastChild);
+}
+for (let i = 0; i < 6; i++) addFeedItem(feedPool[Math.floor(Math.random() * feedPool.length)]());
+setInterval(() => { if (!feedPaused && !document.hidden) addFeedItem(feedPool[Math.floor(Math.random() * feedPool.length)]()); }, 2800);
+$('#feedPauseBtn').addEventListener('click', function(){
+  feedPaused = !feedPaused;
+  this.textContent = feedPaused ? 'RESUME' : 'PAUSE';
+  this.style.color = feedPaused ? '#67e8f9' : '';
+});
+
+/* ---------- NOTIFICATIONS ---------- */
+function renderNotifs(){
+  const unread = notifs.filter(n => n.unread).length;
+  const badge = $('#bellBadge');
+  badge.textContent = unread; badge.style.display = unread ? 'flex' : 'none';
+  $('#notifUnread').textContent = unread + ' unread';
+  $('#notifList').innerHTML = notifs.map(n =>
+    '<div class="notif-item' + (n.unread ? ' unread' : '') + '" data-nid="' + n.id + '"><span class="ndot ' + n.tone + '"></span>' +
+    '<div><div class="notif-title">' + n.title + '</div><div class="notif-sub">' + n.sub + '</div><div class="notif-time">' + n.time + '</div></div></div>').join('');
+}
+$('#bellBtn').addEventListener('click', e => { e.stopPropagation(); $('#notifPanel').classList.toggle('open'); });
+document.addEventListener('click', e => { if (!e.target.closest('.bell-wrap')) $('#notifPanel').classList.remove('open'); });
+$('#notifList').addEventListener('click', e => {
+  const item = e.target.closest('.notif-item'); if (!item) return;
+  const n = notifs.find(x => x.id === +item.dataset.nid); if (n){ n.unread = false; renderNotifs(); }
+});
+$('#markAllRead').addEventListener('click', () => { notifs.forEach(n => n.unread = false); renderNotifs(); toast('All notifications marked as read', 'info'); });
+
+/* ---------- POSTURE & POLICY ENGINE ---------- */
+const layerMap = {
+  Device:   { orig: 99.1, fill: '#layerDevice',   rate: '#rateDevice',   chip: '#chipDevice' },
+  Geo:      { orig: 98.7, fill: '#layerGeo',      rate: '#rateGeo',      chip: '#chipGeo' },
+  Behavior: { orig: 97.4, fill: '#layerBehavior', rate: '#rateBehavior', chip: '#chipBehavior' },
+  Dlp:      { orig: 99.8, fill: '#layerDlp',      rate: '#rateDlp',      chip: '#chipDlp' },
+  Jit:      { orig: 98.2, fill: '#layerJit',      rate: '#rateJit',      chip: '#chipJit' }
+};
+const POSTURE_BASE = 43, RING_C = 238.76;
+function recomputePosture(){
+  let score = POSTURE_BASE, anyOff = false;
+  $$('.policy-switch').forEach(sw => {
+    const layer = layerMap[sw.dataset.layer], w = +sw.dataset.weight;
+    if (sw.checked){
+      score += w;
+      layer.fill && ($(layer.fill).style.width = layer.orig + '%', $(layer.fill).classList.remove('degraded'));
+      $(layer.rate).textContent = layer.orig.toFixed(1) + '%'; $(layer.rate).classList.remove('degraded');
+      const chip = $(layer.chip); chip.textContent = 'COMPLIANT'; chip.className = 'layer-chip ok';
+    } else {
+      anyOff = true;
+      const degraded = Math.max(30, layer.orig * 0.32);
+      $(layer.fill).style.width = degraded + '%'; $(layer.fill).classList.add('degraded');
+      $(layer.rate).textContent = degraded.toFixed(1) + '%'; $(layer.rate).classList.add('degraded');
+      const chip = $(layer.chip); chip.textContent = 'DEGRADED'; chip.className = 'layer-chip bad';
+    }
+  });
+  const ring = $('#sidePostureRing');
+  ring.style.strokeDashoffset = RING_C * (1 - score / 100);
+  ring.style.stroke = score >= 85 ? 'url(#pgrad)' : score >= 70 ? '#fbbf24' : '#fb7185';
+  $('#sidePosture').textContent = score;
+  $('#postureGrade').textContent = score >= 85 ? 'Grade A · Excellent' : score >= 70 ? 'Grade C · Degraded' : 'Grade F · Critical';
+  $('#postureGrade').style.color = score >= 85 ? '#a7f3d0' : score >= 70 ? '#fde68a' : '#fda4af';
+  $('#greetingSub').firstChild.textContent = score >= 85
+    ? 'Posture excellent — 1,847 verification checks passed in the last 24 hours. '
+    : score >= 70 ? 'Posture degraded — review the Security Center safeguards. '
+    : 'Posture critical — re-enable safeguards immediately. ';
+  const pill = $('#headerPill');
+  if (anyOff){
+    pill.style.borderColor = 'rgba(251,191,36,.45)'; pill.style.color = '#fde68a';
+    $('#headerPillText').textContent = 'POSTURE DEGRADED';
+  } else {
+    pill.style.borderColor = 'rgba(52,211,153,.4)'; pill.style.color = '#6ee7b7';
+    $('#headerPillText').textContent = 'ZERO-TRUST ENFORCING';
+  }
+}
+$$('.policy-switch').forEach(sw => sw.addEventListener('change', () => {
+  recomputePosture();
+  if (sw.checked) toast('<b>' + sw.dataset.label + '</b> re-enabled — posture restored', 'info');
+  else toast('<b>' + sw.dataset.label + '</b> disabled — org posture degraded', 'warn');
+  logAudit('POLICY_UPDATE', sw.dataset.label + (sw.checked ? ' · enabled' : ' · DISABLED'), sw.checked ? 'Allowed' : 'Challenged');
+}));
+$$('.pref-switch').forEach(sw => sw.addEventListener('change', () => {
+  toast('<b>' + sw.dataset.label + '</b> ' + (sw.checked ? 'enabled' : 'disabled'), sw.checked ? 'success' : 'warn');
+}));
+$('#idleTimeout').addEventListener('change', e => toast('Idle timeout set to <b>' + e.target.value + '</b> — sessions re-validate on wake', 'info'));
+$('#revokeSessionsBtn').addEventListener('click', () => {
+  sessionLeft = 15 * 60;
+  logAudit('SESSION_REVOKE_ALL', '17 tokens · 6 devices invalidated', 'Allowed');
+  toast('All <b>17 active sessions</b> revoked — full re-authentication required', 'danger');
+});
+$('#purgeAuditBtn').addEventListener('click', () => {
+  audit = [];
+  renderAudit();
+  toast('Audit log purged — signed attestation written · AUD-' + randId(6).toUpperCase(), 'danger');
+});
+$('#logoutBtn').addEventListener('click', () => toast('Session locked — re-authentication required', 'info'));
+$('#genReportBtn').addEventListener('click', () => {
+  const report = 'SECURESHARE CLOUD — 24H POSTURE REPORT\n======================================\nPeriod.............: ' + new Date(Date.now()-86400e3).toISOString().slice(0,10) + ' → ' + new Date().toISOString().slice(0,10) + '\nTotal checks.......: 1,847\nAllowed............: 1,712 (92.7%)\nChallenged (MFA)...: 118 (6.4%)\nDenied.............: 17 (0.9%)\nBlocks (30d).......: Impossible travel 34 · Non-compliant device 28 · ZTA-114 19 · Behavioral 12 · DLP 8\nPosture score......: ' + $('#sidePosture').textContent + '/100\nSigner.............: HSM-2 attestation key k-9f31…\n';
+  const blob = new Blob([report], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'secureshare-posture-report.txt';
+  document.body.appendChild(a); a.click(); a.remove();
+  toast('24h posture report generated &amp; signed');
+});
+
+/* ---------- CHARTS (ECharts) ---------- */
+window.__charts = [];
+function buildSeries(seed, days){
+  const r = seededRand(seed), labels = [], allowed = [], chal = [], blockedS = [];
+  for (let i = days - 1; i >= 0; i--){
+    const dt = new Date(Date.now() - i * 86400e3);
+    labels.push(dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+    allowed.push(Math.round(1420 + r() * 620));
+    chal.push(Math.round(82 + r() * 62));
+    blockedS.push(Math.round(6 + r() * 17));
+  }
+  return { labels, allowed, chal, blockedS };
+}
+const ds14 = buildSeries(7, 14), ds30 = buildSeries(13, 30);
+const tooltipBase = { backgroundColor: '#0c1428', borderColor: 'rgba(34,211,238,.28)', borderWidth: 1, textStyle: { color: '#e6edf7', fontSize: 11, fontFamily: 'Inter' }, padding: [9, 13] };
+function initDashboardCharts(){
+  if (!window.echarts) return;
+  const actEl = $('#activityChart');
+  const act = echarts.init(actEl, null, { renderer: 'canvas' });
+  const area = new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: 'rgba(34,211,238,.34)' }, { offset: 1, color: 'rgba(34,211,238,0)' }]);
+  act.setOption({
+    tooltip: Object.assign({}, tooltipBase, { trigger: 'axis', axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(34,211,238,.07)' } } }),
+    grid: { left: 44, right: 8, top: 18, bottom: 26 },
+    xAxis: { type: 'category', boundaryGap: false, data: ds14.labels, axisLine: { show: false }, axisTick: { show: false }, axisLabel: { color: '#5b6b85', fontFamily: 'JetBrains Mono', fontSize: 9.5 } },
+    yAxis: { type: 'value', splitLine: { lineStyle: { color: 'rgba(148,163,184,.08)' } }, axisLabel: { color: '#5b6b85', fontFamily: 'JetBrains Mono', fontSize: 9.5 } },
+    series: [
+      { name: 'Allowed', type: 'line', smooth: 0.42, symbol: 'none', data: ds14.allowed, lineStyle: { width: 2.6, color: '#22d3ee', shadowColor: 'rgba(34,211,238,.5)', shadowBlur: 12 }, itemStyle: { color: '#22d3ee' }, areaStyle: { color: area } },
+      { name: 'Challenged', type: 'line', smooth: 0.42, symbol: 'none', data: ds14.chal, lineStyle: { width: 2, color: '#fbbf24' }, itemStyle: { color: '#fbbf24' } },
+      { name: 'Blocked', type: 'line', smooth: 0.42, symbol: 'circle', symbolSize: 5, data: ds14.blockedS, lineStyle: { width: 2, color: '#fb7185' }, itemStyle: { color: '#fb7185', borderColor: '#0c1428', borderWidth: 2 } }
+    ]
+  });
+  window.__charts.push(act); window.__activityChart = act;
+  $('#rangeSelect').addEventListener('change', e => {
+    const ds = e.target.value === '30' ? ds30 : ds14;
+    act.setOption({ xAxis: { data: ds.labels }, series: [{ data: ds.allowed }, { data: ds.chal }, { data: ds.blockedS }] });
+  });
+
+  const donut = echarts.init($('#donutChart'));
+  donut.setOption({
+    tooltip: Object.assign({}, tooltipBase, { trigger: 'item', formatter: '{b}: <b>{c}</b> ({d}%)' }),
+    series: [{
+      type: 'pie', radius: ['60%', '86%'], padAngle: 3, silent: false,
+      itemStyle: { borderRadius: 9, borderColor: '#0d1626', borderWidth: 5, shadowBlur: 18, shadowColor: 'rgba(0,0,0,.45)' },
+      label: { show: false }, emphasis: { scale: true, scaleSize: 7 },
+      data: [
+        { value: 1712, name: 'Allowed',    itemStyle: { color: '#34d399' } },
+        { value: 118,  name: 'Challenged', itemStyle: { color: '#fbbf24' } },
+        { value: 17,   name: 'Denied',     itemStyle: { color: '#fb7185' } }
+      ]
+    }]
+  });
+  window.__charts.push(donut);
+}
+let blocksInit = false;
+function initBlocksChart(){
+  if (blocksInit || !window.echarts) return;
+  blocksInit = true;
+  const chart = echarts.init($('#blocksChart'));
+  const grad = new echarts.graphic.LinearGradient(0, 0, 1, 0, [{ offset: 0, color: '#fb7185' }, { offset: 1, color: '#f97316' }]);
+  chart.setOption({
+    tooltip: Object.assign({}, tooltipBase, { trigger: 'axis', axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(251,113,133,.07)' } } }),
+    grid: { left: 8, right: 40, top: 6, bottom: 4, containLabel: true },
+    xAxis: { type: 'value', splitLine: { lineStyle: { color: 'rgba(148,163,184,.07)' } }, axisLabel: { show: false } },
+    yAxis: { type: 'category', inverse: true, data: ['Impossible travel', 'Non-compliant device', 'Policy violation (ZTA-114)', 'Behavioral anomaly', 'Excessive downloads'], axisLine: { show: false }, axisTick: { show: false }, axisLabel: { color: '#8fa3bf', fontSize: 10.5, fontFamily: 'Inter' } },
+    series: [{ type: 'bar', data: [34, 28, 19, 12, 8], barWidth: 13, itemStyle: { borderRadius: [2, 8, 8, 2], color: grad, shadowColor: 'rgba(251,113,133,.4)', shadowBlur: 10 }, label: { show: true, position: 'right', color: '#a9bcd6', fontFamily: 'JetBrains Mono', fontSize: 10.5 } }]
+  });
+  window.__blocksChart = chart;
+  window.__charts.push(chart);
+}
+window.addEventListener('resize', () => { window.__charts.forEach(c => c.resize()); });
+
+/* ---------- INIT ---------- */
+renderFiles();
+renderRecent();
+renderLinks();
+renderAudit();
+renderNotifs();
+renderBlocked();
+initDashboardCharts();
+recomputePosture();
+/* animate posture ring on load */
+setTimeout(() => { $('#sidePostureRing').style.strokeDashoffset = RING_C * (1 - 94 / 100); }, 350);
+(function animatePostureNumber(){
+  const el = $('#sidePosture'), t0 = performance.now();
+  function frame(t){
+    const p = Math.min((t - t0) / 1300, 1), e = 1 - Math.pow(2, -8 * p);
+    el.textContent = Math.round(94 * (p === 1 ? 1 : e));
+    if (p < 1) requestAnimationFrame(frame); else el.textContent = '94';
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
